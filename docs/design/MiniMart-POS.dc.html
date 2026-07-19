@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#F7F1E6;}
+  *{box-sizing:border-box;}
+  a{color:#17706A;text-decoration:none;}
+  a:hover{color:#C2571F;}
+  input,select,button{font-family:'IBM Plex Sans Thai',sans-serif;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:#D9CBB4;border-radius:8px;border:2px solid #F7F1E6;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  @keyframes popIn{0%{transform:scale(.92);opacity:0;}100%{transform:scale(1);opacity:1;}}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+</style>
+</helmet>
+<div style="display:flex;height:100vh;font-family:'IBM Plex Sans Thai',sans-serif;color:#2B2420;background:#F7F1E6;overflow:hidden;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <nav style="width:{{ sbW }};flex-shrink:0;background:#0F3B39;display:flex;flex-direction:column;padding:16px 12px;gap:4px;transition:width .2s ease;overflow:hidden;">
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 4px 18px 4px;">
+      <div style="width:38px;height:38px;border-radius:13px;background:#E89B2D;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12);">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0F3B39" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m5 11 4-7"></path><path d="m19 11-4-7"></path><path d="M2 11h20"></path><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.6-7.4"></path><path d="m9 11 1 9"></path><path d="m15 11-1 9"></path></svg>
+      </div>
+      <div style="display:{{ lblD }};flex:1;min-width:0;">
+        <div style="color:#F7F1E6;font-weight:700;font-size:15px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ shopName }}</div>
+        <div style="color:#7FA9A4;font-size:11px;font-family:'Space Grotesk',sans-serif;">POS · v2.4</div>
+      </div>
+      <button onClick="{{ toggleSidebar }}" title="ย่อ/ขยายเมนู" style="display:{{ lblF }};border:none;background:#134E4A;color:#CBDEDB;width:26px;height:26px;border-radius:8px;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;" style-hover="background:#1B5F5A;color:#fff;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+      </button>
+    </div>
+    <sc-if value="{{ collapsed }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ toggleSidebar }}" title="ขยายเมนู" style="border:none;background:#134E4A;color:#CBDEDB;height:34px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:4px;" style-hover="background:#1B5F5A;color:#fff;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+      </button>
+    </sc-if>
+    <button onClick="{{ goPos }}" title="แคชเชียร์" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;border-radius:999px;cursor:pointer;font-size:14px;font-weight:600;text-align:left;justify-content:{{ navJustify }};background:{{ navBgPos }};color:{{ navColPos }};transition:background .15s;" style-hover="filter:brightness(1.1);">
+      <svg width="18" height="18" style="flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+      <span style="display:{{ lblD }};">แคชเชียร์</span>
+    </button>
+    <button onClick="{{ goStore }}" title="หน้าร้าน" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;border-radius:999px;cursor:pointer;font-size:14px;font-weight:600;text-align:left;justify-content:{{ navJustify }};background:{{ navBgStore }};color:{{ navColStore }};transition:background .15s;" style-hover="filter:brightness(1.1);">
+      <svg width="18" height="18" style="flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+      <span style="display:{{ lblD }};">หน้าร้าน</span>
+    </button>
+    <button onClick="{{ goInv }}" title="สต็อกสินค้า" style="position:relative;display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;border-radius:999px;cursor:pointer;font-size:14px;font-weight:600;text-align:left;justify-content:{{ navJustify }};background:{{ navBgInv }};color:{{ navColInv }};transition:background .15s;" style-hover="filter:brightness(1.1);">
+      <svg width="18" height="18" style="flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
+      <span style="flex:1;display:{{ lblD }};">สต็อกสินค้า</span>
+      <sc-if value="{{ hasLow }}" hint-placeholder-val="{{ false }}">
+        <span style="display:{{ lblD }};background:#C23A2B;color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;font-family:'Space Grotesk',sans-serif;">{{ lowCount }}</span>
+      </sc-if>
+      <sc-if value="{{ lowDot }}" hint-placeholder-val="{{ false }}">
+        <span style="position:absolute;top:7px;right:9px;width:9px;height:9px;border-radius:50%;background:#C23A2B;border:1.5px solid #0F3B39;"></span>
+      </sc-if>
+    </button>
+    <button onClick="{{ goDash }}" title="แดชบอร์ด" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;border-radius:999px;cursor:pointer;font-size:14px;font-weight:600;text-align:left;justify-content:{{ navJustify }};background:{{ navBgDash }};color:{{ navColDash }};transition:background .15s;" style-hover="filter:brightness(1.1);">
+      <svg width="18" height="18" style="flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+      <span style="display:{{ lblD }};">แดชบอร์ด</span>
+    </button>
+    <div style="flex:1;"></div>
+    <div style="display:{{ lblD }};background:#134E4A;border-radius:14px;padding:12px 14px;">
+      <div style="color:#7FA9A4;font-size:11px;">ยอดขายวันนี้</div>
+      <div style="color:#F7F1E6;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;">{{ dTodayText }}</div>
+      <div style="color:#7FA9A4;font-size:11px;">{{ dBills }} บิล · กะเช้า</div>
+    </div>
+    <div style="display:{{ lblF }};align-items:center;gap:8px;padding:12px 8px 2px 8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:#E89B2D;color:#0F3B39;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">ก</div>
+      <div style="color:#CBDEDB;font-size:12px;line-height:1.3;">แคชเชียร์: ก้อย<br><span style="color:#7FA9A4;font-size:11px;">ศ. 18 ก.ค. 2569</span></div>
+    </div>
+  </nav>
+
+  <!-- ============ POS ============ -->
+  <sc-if value="{{ isPos }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;display:flex;min-width:0;">
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0;padding:14px 14px 14px 16px;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #E0D3BD;border-radius:999px;padding:8px 14px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A7A66" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input value="{{ posQ }}" onChange="{{ setPosQ }}" placeholder="ค้นหาสินค้า หรือยิงบาร์โค้ด…" style="border:none;outline:none;background:transparent;font-size:14px;flex:1;color:#2B2420;">
+          </div>
+          <button onClick="{{ showBest }}" style="display:flex;align-items:center;gap:6px;background:{{ bestBg }};color:{{ bestCol }};border:1.5px solid #E0D3BD;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;" style-hover="border-color:#C2571F;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"></polygon></svg>
+            ขายดี
+          </button>
+          <button onClick="{{ enterCust }}" title="เปิดจอสำหรับลูกค้า" style="display:flex;align-items:center;gap:6px;background:#0F3B39;color:#F7F1E6;border:none;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;" style-hover="background:#134E4A;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8"></path><path d="M12 17v4"></path></svg>
+            จอลูกค้า
+          </button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <sc-for list="{{ posCats }}" as="c" hint-placeholder-count="5">
+            <button onClick="{{ c.sel }}" style="border:1.5px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.col }};border-radius:999px;padding:6px 15px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .12s;" style-hover="border-color:#C2571F;">{{ c.name }}</button>
+          </sc-for>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding-right:4px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px;">
+            <sc-for list="{{ posProducts }}" as="p" hint-placeholder-count="12">
+              <button onClick="{{ p.add }}" style="background:#fff;border:1.5px solid #E0D3BD;border-radius:14px;padding:0;cursor:{{ p.cur }};opacity:{{ p.op }};text-align:left;overflow:hidden;transition:transform .1s, border-color .12s;display:flex;flex-direction:column;" style-hover="border-color:#C2571F;transform:translateY(-2px);" style-active="transform:scale(.97);">
+                <div style="height:56px;background:{{ p.tile }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;color:{{ p.tileCol }};position:relative;width:100%;">
+                  {{ p.initial }}
+                  <sc-if value="{{ p.lowBadge }}" hint-placeholder-val="{{ false }}">
+                    <span style="position:absolute;top:5px;right:6px;background:#C23A2B;color:#fff;font-size:10px;border-radius:999px;padding:1px 7px;font-weight:600;">{{ p.lowBadge }}</span>
+                  </sc-if>
+                </div>
+                <div style="padding:7px 9px 9px 9px;display:flex;flex-direction:column;gap:2px;width:100%;">
+                  <div style="font-size:12.5px;font-weight:500;line-height:1.25;height:31px;overflow:hidden;">{{ p.name }}</div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#C2571F;">{{ p.priceText }}</span>
+                    <span style="font-size:10.5px;color:#8A7A66;">{{ p.stockText }}</span>
+                  </div>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cart -->
+      <div style="width:330px;flex-shrink:0;background:#fff;border-left:1.5px solid #E0D3BD;display:flex;flex-direction:column;">
+        <div style="padding:14px 16px 10px 16px;border-bottom:1.5px dashed #E0D3BD;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-weight:700;font-size:16px;white-space:nowrap;">บิลปัจจุบัน <span style="color:#8A7A66;font-weight:500;font-size:13px;">({{ cartCount }} ชิ้น)</span></div>
+          <span style="font-family:'Space Grotesk',sans-serif;font-size:12px;color:#8A7A66;">#{{ nextBillNo }}</span>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:6px;">
+          <sc-if value="{{ cartEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;color:#B5A88F;padding:40px 20px;font-size:13px;line-height:1.6;">ยังไม่มีสินค้าในบิล<br>แตะสินค้าด้านซ้ายเพื่อเพิ่ม</div>
+          </sc-if>
+          <sc-for list="{{ cartRows }}" as="r" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:8px;background:#FBF7EF;border:1px solid #EFE5D2;border-radius:12px;padding:7px 9px;animation:fadeIn .15s;">
+              <div style="width:34px;height:34px;border-radius:9px;background:{{ r.tile }};color:{{ r.tileCol }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;">{{ r.initial }}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.name }}</div>
+                <div style="font-size:11px;color:#8A7A66;font-family:'Space Grotesk',sans-serif;">{{ r.unitText }}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <button onClick="{{ r.dec }}" style="width:24px;height:24px;border-radius:50%;border:1.5px solid #E0D3BD;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#2B2420;" style-hover="border-color:#C2571F;color:#C2571F;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"></path></svg>
+                </button>
+                <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;width:22px;text-align:center;">{{ r.qty }}</span>
+                <button onClick="{{ r.inc }}" style="width:24px;height:24px;border-radius:50%;border:1.5px solid #E0D3BD;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#2B2420;" style-hover="border-color:#17706A;color:#17706A;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                </button>
+              </div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;width:52px;text-align:right;">{{ r.lineText }}</div>
+              <button onClick="{{ r.remove }}" style="width:24px;height:24px;border:none;background:transparent;cursor:pointer;color:#B5A88F;display:flex;align-items:center;justify-content:center;" style-hover="color:#C23A2B;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
+          </sc-for>
+        </div>
+        <div style="border-top:1.5px dashed #E0D3BD;padding:12px 16px 14px 16px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:6px;">
+            <button onClick="{{ holdBill }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:600;cursor:pointer;color:#2B2420;" style-hover="border-color:#17706A;color:#17706A;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="14" y="4" width="4" height="16" rx="1"></rect><rect x="6" y="4" width="4" height="16" rx="1"></rect></svg>
+              พักบิล
+            </button>
+            <sc-if value="{{ hasHeld }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ resumeHeld }}" style="flex:1;border:1.5px solid #17706A;background:#E4F0EE;color:#17706A;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:600;cursor:pointer;" style-hover="background:#D3E7E4;">เรียกบิลพัก ({{ heldCount }})</button>
+            </sc-if>
+            <button onClick="{{ cancelBill }}" style="flex:1;border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:600;cursor:pointer;color:#2B2420;" style-hover="border-color:#C23A2B;color:#C23A2B;">ยกเลิกบิล</button>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;">
+            <span style="font-size:14px;font-weight:600;color:#8A7A66;">ยอดรวม</span>
+            <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:32px;color:#0F3B39;">{{ animTotalText }}</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button onClick="{{ payCash }}" style="flex:1.4;display:flex;align-items:center;justify-content:center;gap:7px;border:none;background:{{ payBtnBg }};color:#fff;border-radius:999px;padding:13px 0;font-size:15px;font-weight:700;cursor:{{ payBtnCur }};box-shadow:0 3px 0 #9C4517;transition:transform .08s;" style-active="transform:translateY(2px);box-shadow:0 1px 0 #9C4517;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+              รับเงินสด
+            </button>
+            <button onClick="{{ payTransfer }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border:none;background:{{ transferBtnBg }};color:#fff;border-radius:999px;padding:13px 0;font-size:14px;font-weight:700;cursor:{{ payBtnCur }};box-shadow:0 3px 0 #0A2C2A;transition:transform .08s;" style-active="transform:translateY(2px);box-shadow:0 1px 0 #0A2C2A;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></svg>
+              โอนจ่าย
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ STOREFRONT ============ -->
+  <sc-if value="{{ isStore }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;display:flex;flex-direction:column;min-width:0;padding:16px 18px;gap:12px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div>
+          <div style="font-size:20px;font-weight:700;">หน้าร้าน — สินค้าทั้งหมด</div>
+          <div style="font-size:12.5px;color:#8A7A66;">มุมมองลูกค้า · {{ storeCount }} รายการ</div>
+        </div>
+        <div style="flex:1;"></div>
+        <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #E0D3BD;border-radius:999px;padding:8px 14px;width:260px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A7A66" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input value="{{ storeQ }}" onChange="{{ setStoreQ }}" placeholder="ค้นหาสินค้า…" style="border:none;outline:none;background:transparent;font-size:13.5px;flex:1;color:#2B2420;">
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <sc-for list="{{ storeCats }}" as="c" hint-placeholder-count="5">
+          <button onClick="{{ c.sel }}" style="border:1.5px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.col }};border-radius:999px;padding:6px 15px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;" style-hover="border-color:#C2571F;">{{ c.name }}</button>
+        </sc-for>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding-right:4px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;">
+          <sc-for list="{{ storeItems }}" as="p" hint-placeholder-count="12">
+            <div style="background:#fff;border:1.5px solid #E0D3BD;border-radius:16px;overflow:hidden;transition:transform .12s, border-color .12s;" style-hover="transform:translateY(-3px);border-color:#C2571F;">
+              <div style="height:92px;background:{{ p.tile }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:36px;color:{{ p.tileCol }};position:relative;">
+                {{ p.initial }}
+                <span style="position:absolute;top:8px;left:8px;background:{{ p.stBg }};color:{{ p.stCol }};font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;">{{ p.stText }}</span>
+              </div>
+              <div style="padding:10px 12px 12px 12px;">
+                <div style="font-size:13.5px;font-weight:600;line-height:1.3;height:35px;overflow:hidden;">{{ p.name }}</div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;">
+                  <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:#C2571F;">{{ p.priceText }}</span>
+                  <span style="font-size:11px;color:#8A7A66;">{{ p.catName }}</span>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ INVENTORY ============ -->
+  <sc-if value="{{ isInv }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;display:flex;flex-direction:column;min-width:0;padding:16px 18px;gap:12px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div>
+          <div style="font-size:20px;font-weight:700;">จัดการสต็อกสินค้า</div>
+          <div style="font-size:12.5px;color:#8A7A66;">{{ invCount }} รายการ · <span style="color:#C23A2B;font-weight:600;">{{ lowCount }} ใกล้หมด/หมด</span></div>
+        </div>
+        <div style="flex:1;"></div>
+        <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #E0D3BD;border-radius:999px;padding:8px 14px;width:230px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A7A66" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input value="{{ invQ }}" onChange="{{ setInvQ }}" placeholder="ค้นหาชื่อ / บาร์โค้ด…" style="border:none;outline:none;background:transparent;font-size:13.5px;flex:1;color:#2B2420;">
+        </div>
+        <sc-if value="{{ anyFilter }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ clearFilters }}" style="display:flex;align-items:center;gap:5px;border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;color:#8A7A66;" style-hover="border-color:#C23A2B;color:#C23A2B;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            ล้างตัวกรอง
+          </button>
+        </sc-if>
+        <button onClick="{{ openImport }}" style="display:flex;align-items:center;gap:6px;border:1.5px solid #17706A;background:#E4F0EE;color:#17706A;border-radius:999px;padding:9px 16px;font-size:13.5px;font-weight:700;cursor:pointer;" style-hover="background:#D3E7E4;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          นำเข้าสินค้า
+        </button>
+        <button onClick="{{ openAdd }}" style="display:flex;align-items:center;gap:6px;border:none;background:#C2571F;color:#fff;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 2px 0 #9C4517;" style-active="transform:translateY(2px);box-shadow:none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+          เพิ่มสินค้า
+        </button>
+      </div>
+      <div style="flex:1;overflow:auto;background:#fff;border:1.5px solid #E0D3BD;border-radius:16px;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="position:sticky;top:0;background:#0F3B39;color:#CBDEDB;z-index:2;">
+              <th style="padding:10px 8px 10px 14px;text-align:left;font-weight:600;">รูป</th>
+              <th onClick="{{ sortByName }}" title="คลิกเพื่อเรียงลำดับ" style="padding:10px 8px;text-align:left;font-weight:600;cursor:pointer;white-space:nowrap;user-select:none;" style-hover="color:#fff;">ชื่อสินค้า <span style="color:{{ ind.name.col }};font-size:11px;">{{ ind.name.sym }}</span></th>
+              <th onClick="{{ sortByBarcode }}" title="คลิกเพื่อเรียงลำดับ" style="padding:10px 8px;text-align:left;font-weight:600;cursor:pointer;white-space:nowrap;user-select:none;" style-hover="color:#fff;">บาร์โค้ด <span style="color:{{ ind.barcode.col }};font-size:11px;">{{ ind.barcode.sym }}</span></th>
+              <th style="padding:10px 8px;text-align:left;font-weight:600;white-space:nowrap;position:relative;">
+                <span onClick="{{ toggleCatFilter }}" title="คลิกเพื่อกรองตามหมวด" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;user-select:none;color:{{ catFilterCol }};" style-hover="color:#fff;">
+                  หมวด
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="{{ catFilterFill }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                </span>
+                <sc-if value="{{ catOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:100%;left:8px;margin-top:6px;background:#fff;border:1.5px solid #E0D3BD;border-radius:12px;box-shadow:0 10px 30px rgba(15,59,57,.18);padding:5px;min-width:150px;z-index:6;animation:popIn .12s;">
+                    <sc-for list="{{ catMenu }}" as="c" hint-placeholder-count="6">
+                      <div onClick="{{ c.pick }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 11px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:{{ c.w }};color:{{ c.col }};background:{{ c.bg }};" style-hover="background:#FBF7EF;">{{ c.label }}<span style="color:#C2571F;">{{ c.tick }}</span></div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </th>
+              <th onClick="{{ sortByCost }}" title="คลิกเพื่อเรียงลำดับ" style="padding:10px 8px;text-align:right;font-weight:600;cursor:pointer;white-space:nowrap;user-select:none;" style-hover="color:#fff;">ทุน <span style="color:{{ ind.cost.col }};font-size:11px;">{{ ind.cost.sym }}</span></th>
+              <th onClick="{{ sortByPrice }}" title="คลิกเพื่อเรียงลำดับ" style="padding:10px 8px;text-align:right;font-weight:600;cursor:pointer;white-space:nowrap;user-select:none;" style-hover="color:#fff;">ขาย <span style="color:{{ ind.price.col }};font-size:11px;">{{ ind.price.sym }}</span></th>
+              <th onClick="{{ sortByStock }}" title="คลิกเพื่อเรียงลำดับ" style="padding:10px 8px;text-align:right;font-weight:600;cursor:pointer;white-space:nowrap;user-select:none;" style-hover="color:#fff;">คงเหลือ <span style="color:{{ ind.stock.col }};font-size:11px;">{{ ind.stock.sym }}</span></th>
+              <th style="padding:10px 8px;text-align:center;font-weight:600;white-space:nowrap;position:relative;">
+                <span onClick="{{ toggleStatusFilter }}" title="คลิกเพื่อกรองตามสถานะ" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;user-select:none;color:{{ statusFilterCol }};" style-hover="color:#fff;">
+                  สถานะ
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="{{ statusFilterFill }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                </span>
+                <sc-if value="{{ statusOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:100%;right:8px;margin-top:6px;background:#fff;border:1.5px solid #E0D3BD;border-radius:12px;box-shadow:0 10px 30px rgba(15,59,57,.18);padding:5px;min-width:140px;z-index:6;animation:popIn .12s;">
+                    <sc-for list="{{ statusMenu }}" as="c" hint-placeholder-count="4">
+                      <div onClick="{{ c.pick }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 11px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:{{ c.w }};color:{{ c.col }};background:{{ c.bg }};text-align:left;" style-hover="background:#FBF7EF;">{{ c.label }}<span style="color:#C2571F;">{{ c.tick }}</span></div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </th>
+              <th style="padding:10px 14px 10px 8px;text-align:right;font-weight:600;">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{ invRows }}" as="r" hint-placeholder-count="8">
+              <tr style="border-bottom:1px solid #F0E7D6;" style-hover="background:#FBF7EF;">
+                <td style="padding:6px 8px 6px 14px;"><div style="width:34px;height:34px;border-radius:9px;background:{{ r.tile }};color:{{ r.tileCol }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;">{{ r.initial }}</div></td>
+                <td style="padding:6px 8px;font-weight:600;">{{ r.name }}</td>
+                <td style="padding:6px 8px;font-family:'Space Grotesk',sans-serif;color:#8A7A66;font-size:12px;">{{ r.barcode }}</td>
+                <td style="padding:6px 8px;color:#8A7A66;">{{ r.catName }}</td>
+                <td style="padding:6px 8px;text-align:right;font-family:'Space Grotesk',sans-serif;">{{ r.costText }}</td>
+                <td style="padding:6px 8px;text-align:right;font-family:'Space Grotesk',sans-serif;font-weight:700;">{{ r.priceText }}</td>
+                <td style="padding:6px 8px;text-align:right;font-family:'Space Grotesk',sans-serif;font-weight:700;color:{{ r.stockCol }};">{{ r.stock }}</td>
+                <td style="padding:6px 8px;text-align:center;"><span style="background:{{ r.stBg }};color:{{ r.stCol }};font-size:11.5px;font-weight:600;border-radius:999px;padding:3px 11px;white-space:nowrap;">{{ r.stText }}</span></td>
+                <td style="padding:6px 14px 6px 8px;text-align:right;white-space:nowrap;">
+                  <button onClick="{{ r.restock }}" style="border:1.5px solid #17706A;background:#E4F0EE;color:#17706A;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;margin-right:5px;" style-hover="background:#D3E7E4;">รับเข้า</button>
+                  <button onClick="{{ r.edit }}" style="border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#2B2420;margin-right:5px;" style-hover="border-color:#C2571F;color:#C2571F;">แก้ไข</button>
+                  <button onClick="{{ r.del }}" style="border:none;background:transparent;color:#B5A88F;cursor:pointer;padding:4px;vertical-align:middle;" style-hover="color:#C23A2B;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ DASHBOARD ============ -->
+  <sc-if value="{{ isDash }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;display:flex;flex-direction:column;min-width:0;padding:16px 18px;gap:12px;overflow-y:auto;">
+      <div>
+        <div style="font-size:20px;font-weight:700;">แดชบอร์ดสรุปยอด</div>
+        <div style="font-size:12.5px;color:#8A7A66;">อัปเดตสดจากหน้าแคชเชียร์ · ศุกร์ 18 ก.ค. 2569</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+        <div style="background:#0F3B39;border-radius:16px;padding:16px 18px;color:#F7F1E6;">
+          <div style="font-size:12.5px;color:#7FA9A4;">ยอดขายวันนี้</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;margin:2px 0;">{{ dTodayText }}</div>
+          <div style="font-size:12px;color:#7FA9A4;">{{ dVsText }}</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid #E0D3BD;border-radius:16px;padding:16px 18px;">
+          <div style="font-size:12.5px;color:#8A7A66;">จำนวนบิล</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;margin:2px 0;color:#0F3B39;">{{ dBills }}</div>
+          <div style="font-size:12px;color:#8A7A66;">เฉลี่ย {{ dAvgText }}/บิล</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid #E0D3BD;border-radius:16px;padding:16px 18px;">
+          <div style="font-size:12.5px;color:#8A7A66;">กำไรโดยประมาณ</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;margin:2px 0;color:#2F7D4F;">{{ dProfitText }}</div>
+          <div style="font-size:12px;color:#8A7A66;">มาร์จิ้น {{ dMarginText }}</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid {{ lowCardBd }};border-radius:16px;padding:16px 18px;">
+          <div style="font-size:12.5px;color:#8A7A66;">สินค้าใกล้หมด/หมด</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;margin:2px 0;color:#C23A2B;">{{ lowCount }}</div>
+          <a href="#" onClick="{{ goInvFromDash }}" style="font-size:12px;font-weight:600;">ไปหน้าสต็อก →</a>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:10px;flex:1;min-height:300px;">
+        <div style="background:#fff;border:1.5px solid #E0D3BD;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;">
+          <div style="font-weight:700;font-size:15px;margin-bottom:4px;">ยอดขาย 7 วันล่าสุด</div>
+          <div style="flex:1;display:flex;align-items:stretch;gap:10px;padding-top:8px;">
+            <sc-for list="{{ chartBars }}" as="b" hint-placeholder-count="7">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+                <div style="flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;">
+                  <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#2B2420;">{{ b.valText }}</div>
+                  <div style="width:100%;max-width:62px;height:{{ b.hPct }};min-height:6px;background:{{ b.fill }};border-radius:8px 8px 4px 4px;transition:height .3s;"></div>
+                </div>
+                <div style="font-size:12.5px;color:{{ b.labelCol }};font-weight:{{ b.labelW }};">{{ b.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border:1.5px solid #E0D3BD;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:9px;">
+          <div style="font-weight:700;font-size:15px;">สินค้าขายดี Top 5</div>
+          <sc-for list="{{ top5 }}" as="t" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:24px;height:24px;border-radius:50%;background:{{ t.rankBg }};color:{{ t.rankCol }};display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;flex-shrink:0;">{{ t.rank }}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;">
+                  <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t.name }}</span>
+                  <span style="font-family:'Space Grotesk',sans-serif;color:#8A7A66;flex-shrink:0;">{{ t.qty }} ชิ้น</span>
+                </div>
+                <div style="height:7px;background:#F0E7D6;border-radius:999px;overflow:hidden;">
+                  <div style="height:100%;width:{{ t.barW }};background:#E89B2D;border-radius:999px;transition:width .4s;"></div>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ PAYMENT MODAL ============ -->
+  <sc-if value="{{ payOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closePay }}" style="position:fixed;inset:0;background:rgba(15,59,57,.45);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeIn .15s;">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:20px;width:400px;padding:22px 24px;animation:popIn .18s;box-shadow:0 20px 50px rgba(15,59,57,.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div style="font-weight:700;font-size:18px;">{{ payTitle }}</div>
+          <button onClick="{{ closePay }}" style="border:none;background:#F0E7D6;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#2B2420;" style-hover="background:#E0D3BD;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+          </button>
+        </div>
+        <div style="background:#FBF7EF;border:1px solid #EFE5D2;border-radius:14px;padding:12px 16px;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;">
+          <span style="font-size:13.5px;color:#8A7A66;font-weight:600;">ยอดที่ต้องชำระ</span>
+          <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:28px;color:#0F3B39;">{{ payTotalText }}</span>
+        </div>
+        <sc-if value="{{ isCash }}" hint-placeholder-val="{{ true }}">
+          <div style="font-size:13px;font-weight:600;color:#8A7A66;margin-bottom:6px;">รับเงินมา</div>
+          <input value="{{ receivedVal }}" onChange="{{ setReceivedInput }}" type="number" placeholder="0" style="width:100%;border:1.5px solid #E0D3BD;border-radius:12px;padding:11px 14px;font-size:22px;font-family:'Space Grotesk',sans-serif;font-weight:700;outline:none;color:#2B2420;margin-bottom:8px;" style-focus="border-color:#C2571F;">
+          <div style="display:flex;gap:6px;margin-bottom:12px;">
+            <button onClick="{{ quickExact }}" style="flex:1;border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:600;cursor:pointer;" style-hover="border-color:#C2571F;color:#C2571F;">พอดี</button>
+            <button onClick="{{ quick100 }}" style="flex:1;border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;" style-hover="border-color:#C2571F;color:#C2571F;">100</button>
+            <button onClick="{{ quick500 }}" style="flex:1;border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;" style-hover="border-color:#C2571F;color:#C2571F;">500</button>
+            <button onClick="{{ quick1000 }}" style="flex:1;border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;" style-hover="border-color:#C2571F;color:#C2571F;">1,000</button>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;background:{{ changeBg }};border-radius:14px;padding:12px 16px;margin-bottom:14px;">
+            <span style="font-size:13.5px;font-weight:600;color:{{ changeLabelCol }};">เงินทอน</span>
+            <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:{{ changeCol }};">{{ changeText }}</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isTransfer }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:6px 0 14px 0;">
+            <div style="width:130px;height:130px;margin:0 auto 10px auto;border:1.5px dashed #B5A88F;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#8A7A66;font-size:12px;background:repeating-linear-gradient(45deg,#FBF7EF,#FBF7EF 6px,#F5EDDE 6px,#F5EDDE 12px);">QR พร้อมเพย์</div>
+            <div style="font-size:13px;color:#8A7A66;">ให้ลูกค้าสแกนจ่าย แล้วกดยืนยันเมื่อเงินเข้า</div>
+          </div>
+        </sc-if>
+        <button onClick="{{ confirmPay }}" style="width:100%;border:none;background:{{ confirmBg }};color:#fff;border-radius:999px;padding:13px 0;font-size:15.5px;font-weight:700;cursor:{{ confirmCur }};box-shadow:0 3px 0 rgba(0,0,0,.25);" style-active="transform:translateY(2px);box-shadow:none;">{{ confirmLabel }}</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ RECEIPT MODAL ============ -->
+  <sc-if value="{{ receiptOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeReceipt }}" style="position:fixed;inset:0;background:rgba(15,59,57,.45);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeIn .15s;">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:6px;width:330px;padding:20px 22px;animation:popIn .18s;box-shadow:0 20px 50px rgba(15,59,57,.3);font-size:13px;">
+        <div style="text-align:center;border-bottom:1.5px dashed #B5A88F;padding-bottom:10px;margin-bottom:10px;">
+          <div style="font-weight:700;font-size:16px;">{{ shopName }}</div>
+          <div style="color:#8A7A66;font-size:11.5px;">ใบเสร็จรับเงิน (อย่างย่อ)</div>
+          <div style="color:#8A7A66;font-size:11.5px;font-family:'Space Grotesk',sans-serif;">#{{ rcBill }} · {{ rcTime }}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px;">
+          <sc-for list="{{ receiptRows }}" as="r" hint-placeholder-count="3">
+            <div style="display:flex;justify-content:space-between;gap:8px;">
+              <span style="flex:1;">{{ r.name }} <span style="color:#8A7A66;font-family:'Space Grotesk',sans-serif;">×{{ r.qty }}</span></span>
+              <span style="font-family:'Space Grotesk',sans-serif;">{{ r.lineText }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="border-top:1.5px dashed #B5A88F;padding-top:10px;display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;"><span>รวมทั้งสิ้น</span><span style="font-family:'Space Grotesk',sans-serif;">{{ rcTotalText }}</span></div>
+          <div style="display:flex;justify-content:space-between;color:#8A7A66;"><span>{{ rcMethodText }}</span><span style="font-family:'Space Grotesk',sans-serif;">{{ rcReceivedText }}</span></div>
+          <sc-if value="{{ rcHasChange }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;justify-content:space-between;color:#8A7A66;"><span>เงินทอน</span><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:#C2571F;">{{ rcChangeText }}</span></div>
+          </sc-if>
+        </div>
+        <div style="text-align:center;color:#B5A88F;font-size:11.5px;margin-top:12px;">ขอบคุณที่อุดหนุนค่ะ 🙏</div>
+        <button onClick="{{ closeReceipt }}" style="width:100%;margin-top:14px;border:none;background:#0F3B39;color:#fff;border-radius:999px;padding:11px 0;font-size:14px;font-weight:700;cursor:pointer;" style-hover="background:#134E4A;">ปิด / บิลถัดไป</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ PRODUCT FORM MODAL ============ -->
+  <sc-if value="{{ invModalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeInv }}" style="position:fixed;inset:0;background:rgba(15,59,57,.45);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeIn .15s;">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:20px;width:430px;padding:22px 24px;animation:popIn .18s;box-shadow:0 20px 50px rgba(15,59,57,.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div style="font-weight:700;font-size:18px;">{{ invModalTitle }}</div>
+          <button onClick="{{ closeInv }}" style="border:none;background:#F0E7D6;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#2B2420;" style-hover="background:#E0D3BD;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+          </button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div>
+            <div style="font-size:12.5px;font-weight:600;color:#8A7A66;margin-bottom:4px;">ชื่อสินค้า *</div>
+            <input value="{{ fName }}" onChange="{{ setFName }}" style="width:100%;border:1.5px solid #E0D3BD;border-radius:10px;padding:9px 12px;font-size:14px;outline:none;" style-focus="border-color:#C2571F;">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <div style="font-size:12.5px;font-weight:600;color:#8A7A66;margin-bottom:4px;">บาร์โค้ด</div>
+              <input value="{{ fBarcode }}" onChange="{{ setFBarcode }}" style="width:100%;border:1.5px solid #E0D3BD;border-radius:10px;padding:9px 12px;font-size:14px;font-family:'Space Grotesk',sans-serif;outline:none;" style-focus="border-color:#C2571F;">
+            </div>
+            <div>
+              <div style="font-size:12.5px;font-weight:600;color:#8A7A66;margin-bottom:4px;">หมวดหมู่</div>
+              <select value="{{ fCat }}" onChange="{{ setFCat }}" style="width:100%;border:1.5px solid #E0D3BD;border-radius:10px;padding:9px 12px;font-size:14px;outline:none;background:#fff;">
+                <sc-for list="{{ catList }}" as="c" hint-placeholder-count="5">
+                  <option value="{{ c }}">{{ c }}</option>
+                </sc-for>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div>
+              <div style="font-size:12.5px;font-weight:600;color:#8A7A66;margin-bottom:4px;">ราคาทุน (฿)</div>
+              <input value="{{ fCost }}" onChange="{{ setFCost }}" type="number" style="width:100%;border:1.5px solid #E0D3BD;border-radius:10px;padding:9px 12px;font-size:14px;font-family:'Space Grotesk',sans-serif;outline:none;" style-focus="border-color:#C2571F;">
+            </div>
+            <div>
+              <div style="font-size:12.5px;font-weight:600;color:#8A7A66;margin-bottom:4px;">ราคาขาย (฿) *</div>
+              <input value="{{ fPrice }}" onChange="{{ setFPrice }}" type="number" style="width:100%;border:1.5px solid #E0D3BD;border-radius:10px;padding:9px 12px;font-size:14px;font-family:'Space Grotesk',sans-serif;outline:none;" style-focus="border-color:#C2571F;">
+            </div>
+            <div>
+              <div style="font-size:12.5px;font-weight:600;color:#8A7A66;margin-bottom:4px;">จำนวนเริ่มต้น</div>
+              <input value="{{ fStock }}" onChange="{{ setFStock }}" type="number" style="width:100%;border:1.5px solid #E0D3BD;border-radius:10px;padding:9px 12px;font-size:14px;font-family:'Space Grotesk',sans-serif;outline:none;" style-focus="border-color:#C2571F;">
+            </div>
+          </div>
+          <sc-if value="{{ formError }}" hint-placeholder-val="{{ false }}">
+            <div style="color:#C23A2B;font-size:12.5px;font-weight:600;">{{ formError }}</div>
+          </sc-if>
+          <div style="display:flex;gap:8px;margin-top:4px;">
+            <button onClick="{{ closeInv }}" style="flex:1;border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:11px 0;font-size:14px;font-weight:600;cursor:pointer;color:#2B2420;" style-hover="border-color:#8A7A66;">ยกเลิก</button>
+            <button onClick="{{ saveForm }}" style="flex:1.5;border:none;background:#C2571F;color:#fff;border-radius:999px;padding:11px 0;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 2px 0 #9C4517;" style-active="transform:translateY(2px);box-shadow:none;">{{ saveLabel }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ IMPORT MODAL ============ -->
+  <sc-if value="{{ importOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeImport }}" style="position:fixed;inset:0;background:rgba(15,59,57,.45);display:flex;align-items:center;justify-content:center;z-index:55;animation:fadeIn .15s;">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:22px;width:720px;max-width:94vw;max-height:88vh;display:flex;flex-direction:column;animation:popIn .18s;box-shadow:0 20px 50px rgba(15,59,57,.3);overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 0 24px;">
+          <div>
+            <div style="font-weight:700;font-size:19px;">นำเข้าสินค้า</div>
+            <div style="font-size:12.5px;color:#8A7A66;">เลือกวิธีรับสินค้าเข้าสต็อก — สต็อกและแดชบอร์ดอัปเดตทันที</div>
+          </div>
+          <button onClick="{{ closeImport }}" style="border:none;background:#F0E7D6;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#2B2420;flex-shrink:0;" style-hover="background:#E0D3BD;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+          </button>
+        </div>
+        <div style="display:flex;gap:4px;padding:14px 24px 0 24px;">
+          <button onClick="{{ goTabScan }}" style="display:flex;align-items:center;gap:7px;border:none;border-bottom:2.5px solid {{ scanTabBd }};background:{{ scanTabBg }};color:{{ scanTabCol }};border-radius:10px 10px 0 0;padding:9px 15px;font-size:13.5px;font-weight:700;cursor:pointer;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5v14"></path><path d="M8 5v14"></path><path d="M12 5v14"></path><path d="M17 5v14"></path><path d="M21 5v14"></path></svg>
+            ยิงบาร์โค้ด
+          </button>
+          <button onClick="{{ goTabCsv }}" style="display:flex;align-items:center;gap:7px;border:none;border-bottom:2.5px solid {{ csvTabBd }};background:{{ csvTabBg }};color:{{ csvTabCol }};border-radius:10px 10px 0 0;padding:9px 15px;font-size:13.5px;font-weight:700;cursor:pointer;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h2"></path><path d="M8 17h2"></path><path d="M14 13h2"></path><path d="M14 17h2"></path></svg>
+            ไฟล์ Excel / CSV
+          </button>
+          <button onClick="{{ goTabPo }}" style="display:flex;align-items:center;gap:7px;border:none;border-bottom:2.5px solid {{ poTabBd }};background:{{ poTabBg }};color:{{ poTabCol }};border-radius:10px 10px 0 0;padding:9px 15px;font-size:13.5px;font-weight:700;cursor:pointer;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12a2 2 0 0 1-2-2V5h4l2 3h10v2"></path><path d="M3 12v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M12 12v9"></path></svg>
+            รับของจากซัพพลายเออร์
+          </button>
+        </div>
+        <div style="border-top:1px solid #EFE5D2;flex:1;overflow-y:auto;padding:18px 24px;">
+
+          <!-- SCAN -->
+          <sc-if value="{{ tabScan }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:6px;">
+                <div style="flex:1;">
+                  <div style="font-size:12.5px;font-weight:600;color:#8A7A66;margin-bottom:4px;">บาร์โค้ด</div>
+                  <input value="{{ scanInput }}" onChange="{{ setScanInput }}" onKeyDown="{{ scanKey }}" placeholder="ยิง/พิมพ์บาร์โค้ด แล้ว Enter" style="width:100%;border:1.5px solid #E0D3BD;border-radius:10px;padding:10px 13px;font-size:15px;font-family:'Space Grotesk',sans-serif;outline:none;" style-focus="border-color:#17706A;">
+                </div>
+                <div style="width:90px;">
+                  <div style="font-size:12.5px;font-weight:600;color:#8A7A66;margin-bottom:4px;">จำนวน</div>
+                  <input value="{{ scanQty }}" onChange="{{ setScanQty }}" type="number" placeholder="1" style="width:100%;border:1.5px solid #E0D3BD;border-radius:10px;padding:10px 13px;font-size:15px;font-family:'Space Grotesk',sans-serif;outline:none;" style-focus="border-color:#17706A;">
+                </div>
+                <button onClick="{{ scanAdd }}" style="border:none;background:#17706A;color:#fff;border-radius:10px;padding:11px 18px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 2px 0 #0A2C2A;" style-active="transform:translateY(2px);box-shadow:none;">เพิ่ม</button>
+              </div>
+              <div style="font-size:11.5px;color:#B5A88F;margin-bottom:12px;">{{ scanHint }}</div>
+              <sc-if value="{{ scanPending }}" hint-placeholder-val="{{ false }}">
+                <div style="border:1.5px solid #E5B7AE;background:#FDF2EF;border-radius:14px;padding:14px 16px;margin-bottom:12px;">
+                  <div style="font-size:13px;font-weight:700;color:#A32617;margin-bottom:8px;">บาร์โค้ด <span style="font-family:'Space Grotesk',sans-serif;">{{ scanPendingBc }}</span> เป็นสินค้าใหม่ — กรอกข้อมูลเพื่อสร้าง</div>
+                  <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:8px;">
+                    <input value="{{ scanNewName }}" onChange="{{ setScanNewName }}" placeholder="ชื่อสินค้า *" style="border:1.5px solid #E0D3BD;border-radius:9px;padding:8px 11px;font-size:13.5px;outline:none;" style-focus="border-color:#C2571F;">
+                    <select value="{{ scanNewCat }}" onChange="{{ setScanNewCat }}" style="border:1.5px solid #E0D3BD;border-radius:9px;padding:8px 11px;font-size:13.5px;outline:none;background:#fff;">
+                      <sc-for list="{{ catList2 }}" as="c" hint-placeholder-count="5"><option value="{{ c }}">{{ c }}</option></sc-for>
+                    </select>
+                  </div>
+                  <div style="display:flex;gap:8px;">
+                    <input value="{{ scanNewCost }}" onChange="{{ setScanNewCost }}" type="number" placeholder="ทุน (฿)" style="flex:1;border:1.5px solid #E0D3BD;border-radius:9px;padding:8px 11px;font-size:13.5px;font-family:'Space Grotesk',sans-serif;outline:none;" style-focus="border-color:#C2571F;">
+                    <input value="{{ scanNewPrice }}" onChange="{{ setScanNewPrice }}" type="number" placeholder="ขาย (฿) *" style="flex:1;border:1.5px solid #E0D3BD;border-radius:9px;padding:8px 11px;font-size:13.5px;font-family:'Space Grotesk',sans-serif;outline:none;" style-focus="border-color:#C2571F;">
+                    <button onClick="{{ confirmPending }}" style="border:none;background:#C2571F;color:#fff;border-radius:9px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;">เพิ่มลงคิว</button>
+                    <button onClick="{{ cancelPending }}" style="border:1.5px solid #E0D3BD;background:#fff;border-radius:9px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;color:#8A7A66;">ยกเลิก</button>
+                  </div>
+                </div>
+              </sc-if>
+              <div style="border:1.5px solid #EFE5D2;border-radius:14px;overflow:hidden;">
+                <div style="background:#FBF7EF;padding:9px 14px;font-size:12.5px;font-weight:700;color:#8A7A66;">คิวรับเข้า ({{ scanCount }} รายการ)</div>
+                <sc-if value="{{ scanEmpty }}" hint-placeholder-val="{{ true }}">
+                  <div style="text-align:center;color:#B5A88F;padding:28px 20px;font-size:13px;">ยังไม่มีรายการ — ยิงบาร์โค้ดเพื่อเริ่ม</div>
+                </sc-if>
+                <sc-for list="{{ scanList }}" as="r" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid #F0E7D6;">
+                    <div style="flex:1;font-size:13.5px;font-weight:600;">{{ r.name }} <span style="color:#8A7A66;font-weight:400;font-size:12px;">· {{ r.cat }}</span></div>
+                    <span style="background:#E4F0EE;color:#17706A;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;">{{ r.statusText }}</span>
+                    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;width:42px;text-align:right;">{{ r.qtyText }}</span>
+                    <button onClick="{{ r.remove }}" style="border:none;background:transparent;color:#B5A88F;cursor:pointer;" style-hover="color:#C23A2B;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- CSV -->
+          <sc-if value="{{ tabCsv }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:7px;border:1.5px solid #17706A;background:#E4F0EE;color:#17706A;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  เลือกไฟล์ .csv
+                  <input type="file" accept=".csv,text/csv" onChange="{{ onCsvFile }}" style="display:none;">
+                </label>
+                <button onClick="{{ fillSample }}" style="border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:600;cursor:pointer;color:#2B2420;" style-hover="border-color:#C2571F;color:#C2571F;">เติมตัวอย่าง</button>
+                <span style="font-size:11.5px;color:#8A7A66;font-family:'Space Grotesk',sans-serif;">รูปแบบ: บาร์โค้ด, ชื่อ, หมวด, ทุน, ขาย, จำนวน</span>
+              </div>
+              <textarea value="{{ csvText }}" onChange="{{ setCsvText }}" placeholder="วางข้อมูล CSV ที่นี่ หรือเลือกไฟล์ด้านบน…" style="width:100%;height:120px;border:1.5px solid #E0D3BD;border-radius:12px;padding:11px 13px;font-size:12.5px;font-family:'Space Grotesk',monospace;outline:none;resize:vertical;color:#2B2420;" style-focus="border-color:#17706A;"></textarea>
+              <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+                <button onClick="{{ parseCsv }}" style="border:none;background:#0F3B39;color:#fff;border-radius:999px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;" style-hover="background:#134E4A;">ตรวจสอบข้อมูล</button>
+              </div>
+              <sc-if value="{{ hasCsvPreview }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:10px;border:1.5px solid #EFE5D2;border-radius:14px;overflow:hidden;">
+                  <div style="background:#FBF7EF;padding:9px 14px;font-size:12.5px;font-weight:700;color:#8A7A66;">พรีวิว · <span style="color:#256B41;">พร้อมนำเข้า {{ csvOkCount }}</span> · <span style="color:#A32617;">ข้อมูลไม่ครบ {{ csvBadCount }}</span></div>
+                  <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+                    <sc-for list="{{ csvRows }}" as="r" hint-placeholder-count="3">
+                      <tr style="border-top:1px solid #F0E7D6;opacity:{{ r.rowOp }};">
+                        <td style="padding:7px 14px;font-weight:600;">{{ r.name }}</td>
+                        <td style="padding:7px 8px;color:#8A7A66;">{{ r.cat }}</td>
+                        <td style="padding:7px 8px;text-align:right;font-family:'Space Grotesk',sans-serif;">{{ r.priceText }}</td>
+                        <td style="padding:7px 8px;text-align:right;font-family:'Space Grotesk',sans-serif;font-weight:700;">{{ r.qtyText }}</td>
+                        <td style="padding:7px 14px;text-align:right;"><span style="background:{{ r.stBg }};color:{{ r.stCol }};font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap;">{{ r.status }}</span></td>
+                      </tr>
+                    </sc-for>
+                  </table>
+                </div>
+                <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+                  <button onClick="{{ applyCsv }}" style="border:none;background:#C2571F;color:#fff;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 2px 0 #9C4517;" style-active="transform:translateY(2px);box-shadow:none;">นำเข้า {{ csvOkCount }} รายการ</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <!-- PO -->
+          <sc-if value="{{ tabPo }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <div style="font-size:12.5px;color:#8A7A66;margin-bottom:10px;">เลือกใบส่งของ/ใบสั่งซื้อจากซัพพลายเออร์ — ระบบดึงรายการมาให้อัตโนมัติ ตรวจแล้วกดยืนยันรับเข้า</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+                <sc-for list="{{ suppliers }}" as="sp" hint-placeholder-count="3">
+                  <button onClick="{{ sp.pick }}" style="text-align:left;border:1.5px solid {{ sp.cardBd }};background:{{ sp.cardBg }};border-radius:14px;padding:12px 13px;cursor:pointer;" style-hover="border-color:#C2571F;">
+                    <div style="font-size:13px;font-weight:700;line-height:1.3;color:#2B2420;">{{ sp.name }}</div>
+                    <div style="font-size:11px;color:#8A7A66;font-family:'Space Grotesk',sans-serif;margin-top:3px;">{{ sp.po }} · {{ sp.itemsText }}</div>
+                  </button>
+                </sc-for>
+              </div>
+              <sc-if value="{{ poPicked }}" hint-placeholder-val="{{ false }}">
+                <div style="border:1.5px solid #EFE5D2;border-radius:14px;overflow:hidden;">
+                  <div style="background:#FBF7EF;padding:9px 14px;font-size:12.5px;font-weight:700;color:#8A7A66;">{{ poName }} · {{ poItemCount }} รายการ</div>
+                  <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+                    <sc-for list="{{ poRows }}" as="r" hint-placeholder-count="4">
+                      <tr style="border-top:1px solid #F0E7D6;">
+                        <td style="padding:8px 14px;font-weight:600;">{{ r.name }} <span style="color:#8A7A66;font-weight:400;">· {{ r.cat }}</span></td>
+                        <td style="padding:8px 8px;"><span style="background:{{ r.stBg }};color:{{ r.stCol }};font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;">{{ r.curText }}</span></td>
+                        <td style="padding:8px 8px;text-align:right;font-family:'Space Grotesk',sans-serif;color:#8A7A66;">{{ r.priceText }}</td>
+                        <td style="padding:8px 14px;text-align:right;font-family:'Space Grotesk',sans-serif;font-weight:700;color:#17706A;">{{ r.qtyText }}</td>
+                      </tr>
+                    </sc-for>
+                  </table>
+                </div>
+                <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+                  <button onClick="{{ applyPo }}" style="border:none;background:#17706A;color:#fff;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 2px 0 #0A2C2A;" style-active="transform:translateY(2px);box-shadow:none;">ยืนยันรับเข้าทั้งใบ</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ TOAST ============ -->
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:70;background:#0F3B39;color:#F7F1E6;border-radius:999px;padding:12px 22px;font-size:13.5px;font-weight:600;box-shadow:0 8px 24px rgba(15,59,57,.35);display:flex;align-items:center;gap:9px;animation:popIn .2s;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FD8A0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+      {{ toast }}
+    </div>
+  </sc-if>
+
+  <!-- ============ CUSTOMER DISPLAY ============ -->
+  <sc-if value="{{ custMode }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:60;background:#0F3B39;display:flex;flex-direction:column;color:#F7F1E6;font-family:'IBM Plex Sans Thai',sans-serif;animation:fadeIn .2s;">
+      <div style="display:flex;align-items:center;gap:14px;padding:26px 40px;border-bottom:1px solid #1B5F5A;">
+        <div style="width:52px;height:52px;border-radius:16px;background:#E89B2D;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12);">
+          <svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="#0F3B39" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m5 11 4-7"></path><path d="m19 11-4-7"></path><path d="M2 11h20"></path><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.6-7.4"></path><path d="m9 11 1 9"></path><path d="m15 11-1 9"></path></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:26px;line-height:1.1;">{{ shopName }}</div>
+          <div style="color:#7FA9A4;font-size:15px;">ยินดีต้อนรับค่ะ 🙏 · รายการสินค้าของคุณ</div>
+        </div>
+        <button onClick="{{ exitCust }}" title="กลับหน้าแคชเชียร์" style="display:flex;align-items:center;gap:7px;border:1px solid #2A6E68;background:#134E4A;color:#9FC3BF;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;" style-hover="background:#1B5F5A;color:#fff;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+          ปิดจอลูกค้า
+        </button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:20px 40px;">
+        <sc-if value="{{ cartEmpty }}" hint-placeholder-val="{{ true }}">
+          <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#5C807C;">
+            <svg width="76" height="76" viewBox="0 0 24 24" fill="none" stroke="#2A6E68" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 11 4-7"></path><path d="m19 11-4-7"></path><path d="M2 11h20"></path><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.6-7.4"></path><path d="m9 11 1 9"></path><path d="m15 11-1 9"></path></svg>
+            <div style="font-size:22px;color:#7FA9A4;">รอสแกนสินค้าชิ้นแรก…</div>
+          </div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;gap:6px;max-width:920px;margin:0 auto;">
+          <sc-for list="{{ cartRows }}" as="r" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:14px;background:#134E4A;border-radius:12px;padding:9px 16px;animation:fadeIn .2s;">
+              <div style="width:38px;height:38px;border-radius:10px;background:{{ r.tile }};color:{{ r.tileCol }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0;">{{ r.initial }}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:18px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.name }}</div>
+              </div>
+              <div style="font-size:15px;color:#7FA9A4;font-family:'Space Grotesk',sans-serif;flex-shrink:0;">{{ r.unitText }} × {{ r.qty }}</div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;flex-shrink:0;width:96px;text-align:right;">{{ r.lineText }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="border-top:1px solid #1B5F5A;background:#0C302E;padding:24px 40px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="color:#7FA9A4;font-size:16px;">รวม {{ cartCount }} ชิ้น · ยอดที่ต้องชำระ</div>
+          <div style="color:#9FC3BF;font-size:14px;">ราคารวมภาษีแล้ว · ชำระเงินสด/พร้อมเพย์</div>
+        </div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:72px;line-height:1;color:#E89B2D;">{{ animTotalText }}</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ RESTOCK MODAL ============ -->
+  <sc-if value="{{ restockOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeRestock }}" style="position:fixed;inset:0;background:rgba(15,59,57,.45);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeIn .15s;">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:20px;width:340px;padding:22px 24px;animation:popIn .18s;box-shadow:0 20px 50px rgba(15,59,57,.3);">
+        <div style="font-weight:700;font-size:17px;margin-bottom:2px;">รับสินค้าเข้า</div>
+        <div style="font-size:13px;color:#8A7A66;margin-bottom:12px;">{{ restockName }} · คงเหลือ <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;">{{ restockCur }}</span></div>
+        <input value="{{ restockQty }}" onChange="{{ setRestockQty }}" type="number" placeholder="จำนวนที่รับเข้า" style="width:100%;border:1.5px solid #E0D3BD;border-radius:12px;padding:10px 14px;font-size:20px;font-family:'Space Grotesk',sans-serif;font-weight:700;outline:none;margin-bottom:8px;" style-focus="border-color:#17706A;">
+        <div style="display:flex;gap:6px;margin-bottom:14px;">
+          <button onClick="{{ rQuick10 }}" style="flex:1;border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;" style-hover="border-color:#17706A;color:#17706A;">+10</button>
+          <button onClick="{{ rQuick24 }}" style="flex:1;border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;" style-hover="border-color:#17706A;color:#17706A;">+24</button>
+          <button onClick="{{ rQuick50 }}" style="flex:1;border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;" style-hover="border-color:#17706A;color:#17706A;">+50</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onClick="{{ closeRestock }}" style="flex:1;border:1.5px solid #E0D3BD;background:#fff;border-radius:999px;padding:10px 0;font-size:13.5px;font-weight:600;cursor:pointer;color:#2B2420;">ยกเลิก</button>
+          <button onClick="{{ confirmRestock }}" style="flex:1.5;border:none;background:#17706A;color:#fff;border-radius:999px;padding:10px 0;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 2px 0 #0A2C2A;" style-active="transform:translateY(2px);box-shadow:none;">ยืนยันรับเข้า</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;shopName&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;มาร์ทมงคลชัย&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;ร้าน&quot;}, &quot;lowStockThreshold&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 10, &quot;min&quot;: 1, &quot;max&quot;: 50, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;สต็อก&quot;}}">
+const CATS = ['เครื่องดื่ม', 'ขนม', 'อาหาร', 'ของใช้', 'บุหรี่/อื่นๆ'];
+const TILES = {
+  'เครื่องดื่ม': ['#DCEDEA', '#17706A'],
+  'ขนม': ['#F6E3C2', '#A66A10'],
+  'อาหาร': ['#F3DACB', '#B0511D'],
+  'ของใช้': ['#E7E8D6', '#6B7040'],
+  'บุหรี่/อื่นๆ': ['#E5E0D8', '#6E6355'],
+};
+const P = (id, name, cat, cost, price, stock, sold) => ({ id, name, cat, cost, price, stock, sold, barcode: '885' + String(1000000000 + id * 7919).slice(0, 10) });
+const SEED_PRODUCTS = [
+  P(1, 'น้ำดื่ม 600 มล.', 'เครื่องดื่ม', 4, 7, 48, 96),
+  P(2, 'น้ำอัดลมโคล่า 325 มล.', 'เครื่องดื่ม', 10, 15, 24, 71),
+  P(3, 'ชาเขียวพร้อมดื่ม', 'เครื่องดื่ม', 14, 20, 18, 42),
+  P(4, 'กาแฟกระป๋อง', 'เครื่องดื่ม', 10, 15, 30, 55),
+  P(5, 'นมเปรี้ยวขวดเล็ก', 'เครื่องดื่ม', 8, 12, 7, 38),
+  P(6, 'เครื่องดื่มชูกำลัง', 'เครื่องดื่ม', 7, 10, 36, 64),
+  P(7, 'น้ำผลไม้กล่อง', 'เครื่องดื่ม', 18, 25, 12, 19),
+  P(8, 'มันฝรั่งทอดกรอบ', 'ขนม', 14, 20, 22, 58),
+  P(9, 'เวเฟอร์ช็อกโกแลต', 'ขนม', 6, 10, 40, 47),
+  P(10, 'ปลาเส้นรสเผ็ด', 'ขนม', 8, 12, 15, 33),
+  P(11, 'สาหร่ายทอดกรอบ', 'ขนม', 14, 20, 9, 41),
+  P(12, 'ลูกอมมินต์', 'ขนม', 3, 5, 60, 28),
+  P(13, 'บิสกิตแซนวิชครีม', 'ขนม', 8, 12, 26, 22),
+  P(14, 'ขนมปังไส้สังขยา', 'ขนม', 12, 18, 6, 36),
+  P(15, 'บะหมี่กึ่งสำเร็จรูป', 'อาหาร', 4.5, 6, 72, 88),
+  P(16, 'ข้าวกล่องแช่เย็น', 'อาหาร', 28, 39, 8, 26),
+  P(17, 'ไส้กรอกชีส', 'อาหาร', 10, 15, 20, 52),
+  P(18, 'ซาลาเปาไส้หมู', 'อาหาร', 15, 22, 10, 31),
+  P(19, 'ไข่ต้ม 2 ฟอง', 'อาหาร', 10, 15, 14, 24),
+  P(20, 'แซนด์วิชแฮมชีส', 'อาหาร', 22, 32, 5, 18),
+  P(21, 'ยาสีฟัน 90 ก.', 'ของใช้', 26, 35, 12, 9),
+  P(22, 'แปรงสีฟัน', 'ของใช้', 17, 25, 16, 7),
+  P(23, 'สบู่ก้อน', 'ของใช้', 12, 18, 20, 11),
+  P(24, 'แชมพูซอง', 'ของใช้', 3.5, 6, 80, 25),
+  P(25, 'ผงซักฟอก 400 ก.', 'ของใช้', 24, 32, 9, 8),
+  P(26, 'กระดาษทิชชู่ม้วน', 'ของใช้', 20, 29, 14, 13),
+  P(27, 'ถ่านไฟฉาย AA (คู่)', 'ของใช้', 32, 45, 0, 5),
+  P(28, 'บุหรี่ (ซอง)', 'บุหรี่/อื่นๆ', 65, 72, 25, 46),
+  P(29, 'ไฟแช็กแก๊ส', 'บุหรี่/อื่นๆ', 6, 10, 33, 21),
+  P(30, 'ถุงขยะ 10 ใบ', 'บุหรี่/อื่นๆ', 15, 22, 11, 6),
+];
+const SEED_TX = [
+  { total: 87, profit: 24, items: 5 }, { total: 156, profit: 41, items: 8 }, { total: 45, profit: 12, items: 3 },
+  { total: 210, profit: 55, items: 9 }, { total: 32, profit: 9, items: 2 }, { total: 128, profit: 33, items: 6 },
+  { total: 74, profit: 20, items: 4 }, { total: 189, profit: 48, items: 7 }, { total: 96, profit: 26, items: 5 },
+  { total: 61, profit: 17, items: 3 }, { total: 143, profit: 37, items: 6 }, { total: 258, profit: 66, items: 11 },
+  { total: 52, profit: 14, items: 3 }, { total: 118, profit: 30, items: 5 }, { total: 83, profit: 22, items: 4 },
+];
+const SUPPLIERS = [
+  { id: 'cpall', name: 'ซีพี ออลล์ · เครื่องดื่ม/ขนม', po: 'PO-2569-0712', items: [
+    { id: 1, qty: 48 }, { id: 2, qty: 24 }, { id: 6, qty: 36 }, { id: 8, qty: 36 },
+    { name: 'โซดาขวดเล็ก', cat: 'เครื่องดื่ม', cost: 8, price: 12, qty: 24 },
+  ] },
+  { id: 'sahapat', name: 'สหพัฒน์ · ของใช้/อาหาร', po: 'PO-2569-0713', items: [
+    { id: 15, qty: 120 }, { id: 24, qty: 100 }, { id: 26, qty: 30 },
+    { name: 'ผ้าเปียกเช็ดทำความสะอาด', cat: 'ของใช้', cost: 18, price: 29, qty: 20 },
+    { name: 'โจ๊กคัพกึ่งสำเร็จรูป', cat: 'อาหาร', cost: 12, price: 18, qty: 36 },
+  ] },
+  { id: 'coke', name: 'ไทยน้ำทิพย์ · น้ำอัดลม', po: 'PO-2569-0715', items: [
+    { id: 2, qty: 48 }, { id: 4, qty: 24 },
+    { name: 'น้ำอัดลมส้ม 325 มล.', cat: 'เครื่องดื่ม', cost: 10, price: 15, qty: 48 },
+  ] },
+];
+const WEEK = [
+  { label: 'ส.', val: 8420 }, { label: 'อา.', val: 9150 }, { label: 'จ.', val: 6890 },
+  { label: 'อ.', val: 7340 }, { label: 'พ.', val: 7020 }, { label: 'พฤ.', val: 7960 },
+];
+
+class Component extends DCLogic {
+  state = {
+    screen: 'pos', products: SEED_PRODUCTS.map(p => ({ ...p })),
+    posQ: '', posCat: 'ทั้งหมด', cart: [], heldBills: [], txs: SEED_TX.map((t, i) => ({ ...t, id: 141 + i })),
+    animTotal: 0, payOpen: false, payMethod: 'cash', received: '',
+    receipt: null, storeQ: '', storeCat: 'ทั้งหมด',
+    invQ: '', invCat: 'ทั้งหมด', invStatus: 'ทั้งหมด', sortKey: null, sortDir: 1, openFilter: null,
+    invModal: null, form: {}, formError: '', restockId: null, restockQty: '',
+    sbCollapsed: false, custMode: false,
+    importTab: null, csvText: '', csvPreview: null,
+    scanInput: '', scanQty: '', scanList: [], scanPending: null,
+    scanNewName: '', scanNewCat: CATS[0], scanNewCost: '', scanNewPrice: '',
+    poSupplier: null, toast: '',
+  };
+
+  componentDidMount() {
+    this._closeFilters = () => { if (this.state.openFilter) this.setState({ openFilter: null }); };
+    document.addEventListener('mousedown', this._closeFilters);
+  }
+  componentWillUnmount() { document.removeEventListener('mousedown', this._closeFilters); }
+  fmt(n) { return '฿' + Math.round(n).toLocaleString('th-TH'); }
+  fmt2(n) { return '฿' + n.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+  low() { return this.props.lowStockThreshold ?? 10; }
+  statusOf(p) {
+    if (p.stock <= 0) return { t: 'หมด', bg: '#F8DBD6', col: '#A32617' };
+    if (p.stock <= this.low()) return { t: 'ใกล้หมด', bg: '#F9EBCB', col: '#8F6410' };
+    return { t: 'มีของ', bg: '#DDEEE3', col: '#256B41' };
+  }
+  cartTotal(cart) { return cart.reduce((s, r) => s + r.qty * r.price, 0); }
+  setCart(cart) {
+    this.setState({ cart });
+    this.tween(this.cartTotal(cart));
+  }
+  tween(target) {
+    cancelAnimationFrame(this._raf);
+    clearTimeout(this._snap);
+    this._snap = setTimeout(() => { cancelAnimationFrame(this._raf); if (this.state.animTotal !== target) this.setState({ animTotal: target }); }, 380);
+    const start = this.state.animTotal, t0 = performance.now();
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / 320);
+      const v = start + (target - start) * (1 - Math.pow(1 - k, 3));
+      this.setState({ animTotal: v });
+      if (k < 1) this._raf = requestAnimationFrame(step);
+    };
+    this._raf = requestAnimationFrame(step);
+  }
+  addToCart(id) {
+    const p = this.state.products.find(x => x.id === id);
+    if (!p || p.stock <= 0) return;
+    const cart = [...this.state.cart];
+    const line = cart.find(r => r.id === id);
+    const inCart = line ? line.qty : 0;
+    if (inCart >= p.stock) return;
+    if (line) line.qty += 1; else cart.push({ id, name: p.name, price: p.price, cost: p.cost, cat: p.cat, qty: 1 });
+    this.setCart(cart);
+  }
+  changeQty(id, d) {
+    let cart = this.state.cart.map(r => r.id === id ? { ...r, qty: r.qty + d } : r).filter(r => r.qty > 0);
+    const p = this.state.products.find(x => x.id === id);
+    cart = cart.map(r => r.id === id && p ? { ...r, qty: Math.min(r.qty, p.stock) } : r);
+    this.setCart(cart);
+  }
+  nextBill() { return 141 + this.state.txs.length; }
+  confirmPay = () => {
+    const { cart, payMethod, received } = this.state;
+    const total = this.cartTotal(cart);
+    if (!cart.length) return;
+    const recv = payMethod === 'cash' ? parseFloat(received || '0') : total;
+    if (payMethod === 'cash' && recv < total) return;
+    const profit = cart.reduce((s, r) => s + (r.price - r.cost) * r.qty, 0);
+    const products = this.state.products.map(p => {
+      const line = cart.find(r => r.id === p.id);
+      return line ? { ...p, stock: Math.max(0, p.stock - line.qty), sold: p.sold + line.qty } : p;
+    });
+    const tx = { id: this.nextBill(), total, profit, items: cart.reduce((s, r) => s + r.qty, 0) };
+    const receipt = {
+      bill: tx.id, rows: cart.map(r => ({ name: r.name, qty: r.qty, lineText: this.fmt2(r.qty * r.price) })),
+      total, received: recv, change: recv - total, method: payMethod,
+      time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.',
+    };
+    this.setState({ products, txs: [...this.state.txs, tx], cart: [], payOpen: false, received: '', receipt, animTotal: 0 });
+  };
+
+  openInvForm(p) {
+    this.setState({
+      invModal: p ? p.id : 'new', formError: '',
+      form: p ? { name: p.name, barcode: p.barcode, cat: p.cat, cost: p.cost, price: p.price, stock: p.stock }
+        : { name: '', barcode: '885' + String(Math.floor(1e9 + Math.random() * 9e9)).slice(0, 10), cat: CATS[0], cost: '', price: '', stock: '' },
+    });
+  }
+  saveForm = () => {
+    const f = this.state.form;
+    if (!f.name || !f.name.trim()) return this.setState({ formError: 'กรุณากรอกชื่อสินค้า' });
+    const price = parseFloat(f.price);
+    if (!(price > 0)) return this.setState({ formError: 'ราคาขายต้องมากกว่า 0' });
+    const cost = parseFloat(f.cost) || 0, stock = Math.max(0, parseInt(f.stock) || 0);
+    let products;
+    if (this.state.invModal === 'new') {
+      const id = Math.max(...this.state.products.map(p => p.id)) + 1;
+      products = [...this.state.products, { id, name: f.name.trim(), barcode: f.barcode, cat: f.cat, cost, price, stock, sold: 0 }];
+    } else {
+      products = this.state.products.map(p => p.id === this.state.invModal ? { ...p, name: f.name.trim(), barcode: f.barcode, cat: f.cat, cost, price, stock } : p);
+    }
+    this.setState({ products, invModal: null });
+  };
+  setF(key) { return (e) => this.setState({ form: { ...this.state.form, [key]: e.target.value }, formError: '' }); }
+  showToast(msg) { clearTimeout(this._toast); this.setState({ toast: msg }); this._toast = setTimeout(() => this.setState({ toast: '' }), 3000); }
+  applyIntake(list) {
+    let products = [...this.state.products];
+    let added = 0, restocked = 0, addedQty = 0, maxId = Math.max(...products.map(p => p.id));
+    list.forEach(it => {
+      if (it.existingId) {
+        products = products.map(p => p.id === it.existingId ? { ...p, stock: p.stock + it.qty } : p);
+        restocked++; addedQty += it.qty;
+      } else {
+        maxId++;
+        products.push({ id: maxId, name: it.name, barcode: it.barcode || ('885' + String(Math.floor(1e9 + Math.random() * 9e9)).slice(0, 10)), cat: CATS.includes(it.cat) ? it.cat : CATS[CATS.length - 1], cost: it.cost || 0, price: it.price || 0, stock: it.qty, sold: 0 });
+        added++; addedQty += it.qty;
+      }
+    });
+    this.setState({ products, importTab: null, csvText: '', csvPreview: null, scanList: [], scanPending: null, poSupplier: null });
+    this.showToast('นำเข้าสำเร็จ · สินค้าใหม่ ' + added + ' · เติมสต็อก ' + restocked + ' · รวม ' + addedQty + ' ชิ้น');
+  }
+  parseCSV(text) {
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return [];
+    let rows = lines;
+    if (/ชื่อ|บาร์โค้ด|name|barcode/i.test(lines[0])) rows = lines.slice(1);
+    return rows.map((line, i) => {
+      const c = line.split(',').map(x => x.trim());
+      const barcode = c[0] || '', name = c[1] || '', cat = c[2] || '', cost = c[3], price = c[4], qty = c[5];
+      const found = this.state.products.find(p => (barcode && p.barcode === barcode) || (name && p.name === name));
+      const priceN = parseFloat(price) || 0, costN = parseFloat(cost) || 0, qtyN = Math.max(0, parseInt(qty) || 0);
+      let status, ok = true;
+      if (found) status = 'เติมสต็อก +' + qtyN;
+      else if (name && priceN > 0) status = 'สินค้าใหม่';
+      else { status = 'ข้อมูลไม่ครบ'; ok = false; }
+      return { line: i + 1, barcode, name: name || '(ไม่มีชื่อ)', cat: CATS.includes(cat) ? cat : CATS[CATS.length - 1], cost: costN, price: priceN, qty: qtyN, foundId: found ? found.id : null, status, ok };
+    });
+  }
+  scanAdd() {
+    const bc = this.state.scanInput.trim();
+    if (!bc) return;
+    const qty = Math.max(1, parseInt(this.state.scanQty) || 1);
+    const found = this.state.products.find(p => p.barcode === bc);
+    if (found) {
+      const list = [...this.state.scanList];
+      const ex = list.find(x => x.existingId === found.id);
+      if (ex) ex.qty += qty; else list.push({ key: Date.now() + Math.random(), existingId: found.id, name: found.name, cat: found.cat, qty });
+      this.setState({ scanList: list, scanInput: '', scanQty: '' });
+    } else {
+      this.setState({ scanPending: bc, scanInput: '', scanNewName: '', scanNewCat: CATS[0], scanNewCost: '', scanNewPrice: '' });
+    }
+  }
+  sortBy(key) {
+    this.setState(s => ({ sortKey: key, sortDir: s.sortKey === key ? -s.sortDir : 1 }));
+  }
+  navSty(id) {
+    const on = this.state.screen === id;
+    return { bg: on ? '#E89B2D' : 'transparent', col: on ? '#0F3B39' : '#CBDEDB' };
+  }
+  chip(name, active, sel) {
+    return { name, sel, bd: active ? '#C2571F' : '#E0D3BD', bg: active ? '#C2571F' : '#fff', col: active ? '#fff' : '#2B2420' };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const shopName = this.props.shopName ?? 'มาร์ทมงคลชัย';
+    const products = s.products;
+    const lowCount = products.filter(p => p.stock <= this.low()).length;
+    const tileOf = (p) => TILES[p.cat] || TILES['บุหรี่/อื่นๆ'];
+    const enrich = (p) => {
+      const [tile, tileCol] = tileOf(p);
+      const st = this.statusOf(p);
+      return { ...p, tile, tileCol, initial: p.name.trim()[0], priceText: this.fmt2(p.price), catName: p.cat, stText: st.t, stBg: st.bg, stCol: st.col };
+    };
+    // ---- POS ----
+    const q = s.posQ.trim().toLowerCase();
+    let posList = products.filter(p => !q || p.name.toLowerCase().includes(q) || p.barcode.includes(q));
+    if (s.posCat === 'ขายดี') posList = [...posList].sort((a, b) => b.sold - a.sold).slice(0, 10);
+    else if (s.posCat !== 'ทั้งหมด') posList = posList.filter(p => p.cat === s.posCat);
+    const posProducts = posList.map(p => {
+      const e = enrich(p);
+      const out = p.stock <= 0;
+      return {
+        ...e, add: () => this.addToCart(p.id), cur: out ? 'not-allowed' : 'pointer', op: out ? 0.45 : 1,
+        stockText: out ? 'หมด' : 'เหลือ ' + p.stock,
+        lowBadge: out ? 'หมด' : (p.stock <= this.low() ? 'เหลือ ' + p.stock : null),
+      };
+    });
+    const posCats = ['ทั้งหมด', ...CATS].map(c => this.chip(c, s.posCat === c, () => this.setState({ posCat: c })));
+    const cartRows = s.cart.map(r => {
+      const [tile, tileCol] = TILES[r.cat] || TILES['บุหรี่/อื่นๆ'];
+      return {
+        ...r, tile, tileCol, initial: r.name.trim()[0], unitText: '@' + r.price, lineText: this.fmt2(r.qty * r.price),
+        inc: () => this.changeQty(r.id, 1), dec: () => this.changeQty(r.id, -1), remove: () => this.setCart(s.cart.filter(x => x.id !== r.id)),
+      };
+    });
+    const total = this.cartTotal(s.cart);
+    const canPay = s.cart.length > 0;
+    // ---- payment ----
+    const recv = parseFloat(s.received || '0');
+    const change = recv - total;
+    const enough = s.payMethod !== 'cash' || change >= 0;
+    // ---- dashboard ----
+    const todaySales = s.txs.reduce((a, t) => a + t.total, 0);
+    const todayProfit = s.txs.reduce((a, t) => a + t.profit, 0);
+    const bills = s.txs.length;
+    const yesterday = WEEK[WEEK.length - 1].val;
+    const vs = todaySales - yesterday;
+    const days = [...WEEK, { label: 'วันนี้', val: todaySales, today: true }];
+    const maxV = Math.max(...days.map(d => d.val));
+    const chartBars = days.map((d, i) => {
+      return {
+        hPct: Math.max(4, Math.round((d.val / maxV) * 82)) + '%', fill: d.today ? '#C2571F' : '#E4D3B4',
+        valText: (d.val / 1000).toFixed(1) + 'k', label: d.label, labelCol: d.today ? '#C2571F' : '#8A7A66', labelW: d.today ? '700' : '400',
+      };
+    });
+    const sortedSold = [...products].sort((a, b) => b.sold - a.sold).slice(0, 5);
+    const maxSold = sortedSold[0] ? sortedSold[0].sold : 1;
+    const top5 = sortedSold.map((p, i) => ({
+      name: p.name, qty: p.sold, rank: i + 1, barW: Math.round((p.sold / maxSold) * 100) + '%',
+      rankBg: i === 0 ? '#E89B2D' : '#F0E7D6', rankCol: i === 0 ? '#0F3B39' : '#8A7A66',
+    }));
+    // ---- storefront ----
+    const sq = s.storeQ.trim().toLowerCase();
+    const storeItems = products.filter(p => (!sq || p.name.toLowerCase().includes(sq)) && (s.storeCat === 'ทั้งหมด' || p.cat === s.storeCat)).map(enrich);
+    const storeCats = ['ทั้งหมด', ...CATS].map(c => this.chip(c, s.storeCat === c, () => this.setState({ storeCat: c })));
+    // ---- inventory ----
+    const iq = s.invQ.trim().toLowerCase();
+    const statusKey = (p) => p.stock <= 0 ? 'หมด' : (p.stock <= this.low() ? 'ใกล้หมด' : 'มีของ');
+    let invList = products.filter(p => (!iq || p.name.toLowerCase().includes(iq) || p.barcode.includes(iq)) && (s.invCat === 'ทั้งหมด' || p.cat === s.invCat) && (s.invStatus === 'ทั้งหมด' || statusKey(p) === s.invStatus));
+    if (s.sortKey) {
+      const k = s.sortKey;
+      const txt = (k === 'name' || k === 'barcode' || k === 'cat');
+      invList = [...invList].sort((a, b) => (txt ? String(a[k]).localeCompare(String(b[k]), 'th') : a[k] - b[k]) * s.sortDir);
+    }
+    const invRows = invList.map(p => {
+      const e = enrich(p);
+      return {
+        ...e, costText: this.fmt2(p.cost), stockCol: p.stock <= 0 ? '#A32617' : (p.stock <= this.low() ? '#8F6410' : '#2B2420'),
+        edit: () => this.openInvForm(p), restock: () => this.setState({ restockId: p.id, restockQty: '' }),
+        del: () => { if (confirm('ลบ "' + p.name + '" ออกจากสต็อก?')) this.setState({ products: s.products.filter(x => x.id !== p.id) }); },
+      };
+    });
+    const ind = {};
+    ['name', 'barcode', 'cost', 'price', 'stock'].forEach(k => {
+      const on = s.sortKey === k;
+      ind[k] = { sym: on ? (s.sortDir === 1 ? '↑' : '↓') : '↕', col: on ? '#E89B2D' : '#5C807C' };
+    });
+    const menuItem = (label, active, pick) => ({ label, pick, w: active ? '700' : '500', col: active ? '#C2571F' : '#2B2420', bg: active ? '#FBF3E7' : 'transparent', tick: active ? '✓' : '' });
+    const restockP = products.find(p => p.id === s.restockId);
+    const rc = s.receipt;
+    const nav = (id) => this.navSty(id);
+    return {
+      shopName,
+      sbW: s.sbCollapsed ? '64px' : '196px', lblD: s.sbCollapsed ? 'none' : 'block', lblF: s.sbCollapsed ? 'none' : 'flex',
+      lowDot: s.sbCollapsed && lowCount > 0,
+      navJustify: s.sbCollapsed ? 'center' : 'flex-start',
+      collapsed: s.sbCollapsed, expanded: !s.sbCollapsed,
+      toggleSidebar: () => this.setState({ sbCollapsed: !s.sbCollapsed }),
+      custMode: s.custMode, enterCust: () => this.setState({ custMode: true }), exitCust: () => this.setState({ custMode: false }),
+      isPos: s.screen === 'pos', isStore: s.screen === 'store', isInv: s.screen === 'inv', isDash: s.screen === 'dash',
+      goPos: () => this.setState({ screen: 'pos' }), goStore: () => this.setState({ screen: 'store' }),
+      goInv: () => this.setState({ screen: 'inv' }), goDash: () => this.setState({ screen: 'dash' }),
+      goInvFromDash: (e) => { e.preventDefault(); this.setState({ screen: 'inv' }); },
+      navBgPos: nav('pos').bg, navColPos: nav('pos').col, navBgStore: nav('store').bg, navColStore: nav('store').col,
+      navBgInv: nav('inv').bg, navColInv: nav('inv').col, navBgDash: nav('dash').bg, navColDash: nav('dash').col,
+      hasLow: lowCount > 0, lowCount, stop: (e) => e.stopPropagation(),
+      // POS
+      posQ: s.posQ, setPosQ: (e) => this.setState({ posQ: e.target.value }), posCats, posProducts,
+      showBest: () => this.setState({ posCat: s.posCat === 'ขายดี' ? 'ทั้งหมด' : 'ขายดี', posQ: '' }),
+      bestBg: s.posCat === 'ขายดี' ? '#E89B2D' : '#fff', bestCol: s.posCat === 'ขายดี' ? '#0F3B39' : '#2B2420',
+      cartRows, cartEmpty: s.cart.length === 0, cartCount: s.cart.reduce((a, r) => a + r.qty, 0),
+      nextBillNo: 'B' + this.nextBill(), animTotalText: this.fmt(s.animTotal),
+      payBtnBg: canPay ? '#C2571F' : '#D8C9B0', transferBtnBg: canPay ? '#0F3B39' : '#B7C6C4', payBtnCur: canPay ? 'pointer' : 'not-allowed',
+      payCash: () => canPay && this.setState({ payOpen: true, payMethod: 'cash', received: '' }),
+      payTransfer: () => canPay && this.setState({ payOpen: true, payMethod: 'transfer' }),
+      holdBill: () => { if (s.cart.length) { this.setState({ heldBills: [...s.heldBills, s.cart] }); this.setCart([]); } },
+      resumeHeld: () => { if (s.heldBills.length && !s.cart.length) { const [h, ...rest] = s.heldBills; this.setState({ heldBills: rest }); this.setCart(h); } },
+      hasHeld: s.heldBills.length > 0, heldCount: s.heldBills.length,
+      cancelBill: () => this.setCart([]),
+      // payment modal
+      payOpen: s.payOpen, closePay: () => this.setState({ payOpen: false }),
+      payTitle: s.payMethod === 'cash' ? 'รับเงินสด' : 'รับโอน / พร้อมเพย์',
+      isCash: s.payMethod === 'cash', isTransfer: s.payMethod === 'transfer',
+      payTotalText: this.fmt2(total), receivedVal: s.received,
+      setReceivedInput: (e) => this.setState({ received: e.target.value }),
+      quickExact: () => this.setState({ received: String(total) }),
+      quick100: () => this.setState({ received: '100' }), quick500: () => this.setState({ received: '500' }), quick1000: () => this.setState({ received: '1000' }),
+      changeText: s.received === '' ? '—' : (change >= 0 ? this.fmt2(change) : 'ขาด ' + this.fmt2(-change)),
+      changeBg: s.received === '' ? '#FBF7EF' : (change >= 0 ? '#DDEEE3' : '#F8DBD6'),
+      changeCol: s.received === '' ? '#B5A88F' : (change >= 0 ? '#256B41' : '#A32617'),
+      changeLabelCol: '#8A7A66',
+      confirmBg: enough && (s.payMethod !== 'cash' || s.received !== '') ? '#17706A' : '#B7C6C4',
+      confirmCur: enough ? 'pointer' : 'not-allowed',
+      confirmLabel: s.payMethod === 'cash' ? 'ยืนยันรับเงิน · พิมพ์ใบเสร็จ' : 'เงินเข้าแล้ว · ยืนยัน',
+      confirmPay: this.confirmPay,
+      // receipt
+      receiptOpen: !!rc, closeReceipt: () => this.setState({ receipt: null }),
+      rcBill: rc ? 'B' + rc.bill : '', rcTime: rc ? rc.time : '', receiptRows: rc ? rc.rows : [],
+      rcTotalText: rc ? this.fmt2(rc.total) : '', rcReceivedText: rc ? this.fmt2(rc.received) : '',
+      rcMethodText: rc ? (rc.method === 'cash' ? 'เงินสด · รับมา' : 'โอน/พร้อมเพย์') : '',
+      rcHasChange: rc ? rc.method === 'cash' && rc.change > 0 : false, rcChangeText: rc ? this.fmt2(rc.change) : '',
+      // storefront
+      storeQ: s.storeQ, setStoreQ: (e) => this.setState({ storeQ: e.target.value }), storeCats, storeItems, storeCount: storeItems.length,
+      // inventory
+      invQ: s.invQ, setInvQ: (e) => this.setState({ invQ: e.target.value }),
+      invCat: s.invCat, invStatus: s.invStatus,
+      invRows, invCount: invList.length, openAdd: () => this.openInvForm(null),
+      // ---- import ----
+      toast: s.toast, hasToast: !!s.toast,
+      openImport: () => this.setState({ importTab: 'scan', scanList: [], scanPending: null, csvText: '', csvPreview: null, poSupplier: null }),
+      importOpen: s.importTab !== null, closeImport: () => this.setState({ importTab: null }),
+      importTab: s.importTab,
+      tabScan: s.importTab === 'scan', tabCsv: s.importTab === 'csv', tabPo: s.importTab === 'po',
+      goTabScan: () => this.setState({ importTab: 'scan' }), goTabCsv: () => this.setState({ importTab: 'csv' }), goTabPo: () => this.setState({ importTab: 'po' }),
+      scanTabBg: s.importTab === 'scan' ? '#FBF3E7' : 'transparent', scanTabCol: s.importTab === 'scan' ? '#C2571F' : '#8A7A66', scanTabBd: s.importTab === 'scan' ? '#C2571F' : 'transparent',
+      csvTabBg: s.importTab === 'csv' ? '#FBF3E7' : 'transparent', csvTabCol: s.importTab === 'csv' ? '#C2571F' : '#8A7A66', csvTabBd: s.importTab === 'csv' ? '#C2571F' : 'transparent',
+      poTabBg: s.importTab === 'po' ? '#FBF3E7' : 'transparent', poTabCol: s.importTab === 'po' ? '#C2571F' : '#8A7A66', poTabBd: s.importTab === 'po' ? '#C2571F' : 'transparent',
+      // scan
+      scanInput: s.scanInput, setScanInput: (e) => this.setState({ scanInput: e.target.value }),
+      scanQty: s.scanQty, setScanQty: (e) => this.setState({ scanQty: e.target.value }),
+      scanAdd: () => this.scanAdd(),
+      scanKey: (e) => { if (e.key === 'Enter') this.scanAdd(); },
+      scanHint: 'ลองพิมพ์บาร์โค้ดที่มีอยู่ เช่น ' + (products[0] ? products[0].barcode : '885…') + ' หรือเลขใหม่เพื่อสร้างสินค้า',
+      scanList: s.scanList.map(x => ({ ...x, qtyText: '×' + x.qty, statusText: 'เติมสต็อก', remove: () => this.setState({ scanList: s.scanList.filter(y => y.key !== x.key) }) })),
+      scanEmpty: s.scanList.length === 0, scanCount: s.scanList.length,
+      scanPending: !!s.scanPending, scanPendingBc: s.scanPending || '',
+      scanNewName: s.scanNewName, setScanNewName: (e) => this.setState({ scanNewName: e.target.value }),
+      scanNewCat: s.scanNewCat, setScanNewCat: (e) => this.setState({ scanNewCat: e.target.value }),
+      scanNewCost: s.scanNewCost, setScanNewCost: (e) => this.setState({ scanNewCost: e.target.value }),
+      scanNewPrice: s.scanNewPrice, setScanNewPrice: (e) => this.setState({ scanNewPrice: e.target.value }),
+      cancelPending: () => this.setState({ scanPending: null }),
+      confirmPending: () => {
+        if (!s.scanNewName.trim() || !(parseFloat(s.scanNewPrice) > 0)) return;
+        const list = [...s.scanList, { key: Date.now() + Math.random(), existingId: null, barcode: s.scanPending, name: s.scanNewName.trim(), cat: s.scanNewCat, cost: parseFloat(s.scanNewCost) || 0, price: parseFloat(s.scanNewPrice), qty: Math.max(1, parseInt(s.scanQty) || 1) }];
+        this.setState({ scanList: list, scanPending: null, scanQty: '' });
+      },
+      applyScan: () => { if (s.scanList.length) this.applyIntake(s.scanList.map(x => ({ existingId: x.existingId || null, barcode: x.barcode, name: x.name, cat: x.cat, cost: x.cost, price: x.price, qty: x.qty }))); },
+      catList2: CATS,
+      // csv
+      csvText: s.csvText,
+      setCsvText: (e) => this.setState({ csvText: e.target.value, csvPreview: null }),
+      onCsvFile: (e) => { const f = e.target.files && e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => this.setState({ csvText: String(r.result), csvPreview: null }); r.readAsText(f); },
+      fillSample: () => this.setState({ csvText: 'บาร์โค้ด,ชื่อ,หมวด,ทุน,ขาย,จำนวน\n8851000010001,น้ำแร่ 500 มล.,เครื่องดื่ม,5,10,48\n8851000010002,ช็อกโกแลตแท่ง,ขนม,9,15,36\n' + (products[0] ? products[0].barcode + ',' + products[0].name + ',,,,24' : ''), csvPreview: null }),
+      parseCsv: () => this.setState({ csvPreview: this.parseCSV(s.csvText) }),
+      csvPreview: s.csvPreview, hasCsvPreview: !!s.csvPreview,
+      csvRows: (s.csvPreview || []).map(r => ({ ...r, qtyText: r.qty, priceText: this.fmt2(r.price), stBg: r.ok ? (r.foundId ? '#DDEEE3' : '#E4F0EE') : '#F8DBD6', stCol: r.ok ? (r.foundId ? '#256B41' : '#17706A') : '#A32617', rowOp: r.ok ? 1 : 0.55 })),
+      csvOkCount: (s.csvPreview || []).filter(r => r.ok).length,
+      csvBadCount: (s.csvPreview || []).filter(r => !r.ok).length,
+      applyCsv: () => { const ok = (s.csvPreview || []).filter(r => r.ok); if (ok.length) this.applyIntake(ok.map(r => ({ existingId: r.foundId, barcode: r.barcode, name: r.name, cat: r.cat, cost: r.cost, price: r.price, qty: r.qty }))); },
+      // po
+      suppliers: SUPPLIERS.map(sp => ({ id: sp.id, name: sp.name, po: sp.po, itemsText: sp.items.length + ' รายการ', pick: () => this.setState({ poSupplier: sp.id }), sel: s.poSupplier === sp.id, cardBd: s.poSupplier === sp.id ? '#C2571F' : '#E0D3BD', cardBg: s.poSupplier === sp.id ? '#FBF3E7' : '#fff' })),
+      poPicked: !!s.poSupplier,
+      poName: (SUPPLIERS.find(x => x.id === s.poSupplier) || {}).name || '',
+      poRows: (() => {
+        const sp = SUPPLIERS.find(x => x.id === s.poSupplier); if (!sp) return [];
+        return sp.items.map((it, i) => {
+          const ex = it.id ? products.find(p => p.id === it.id) : null;
+          return { key: i, name: ex ? ex.name : it.name, cat: ex ? ex.cat : it.cat, qty: it.qty, qtyText: '+' + it.qty, curText: ex ? ('คงเหลือ ' + ex.stock) : 'สินค้าใหม่', stBg: ex ? '#DDEEE3' : '#E4F0EE', stCol: ex ? '#256B41' : '#17706A', priceText: this.fmt2(ex ? ex.price : it.price) };
+        });
+      })(),
+      poItemCount: (() => { const sp = SUPPLIERS.find(x => x.id === s.poSupplier); return sp ? sp.items.length : 0; })(),
+      applyPo: () => {
+        const sp = SUPPLIERS.find(x => x.id === s.poSupplier); if (!sp) return;
+        this.applyIntake(sp.items.map(it => it.id ? { existingId: it.id, qty: it.qty } : { existingId: null, name: it.name, cat: it.cat, cost: it.cost, price: it.price, qty: it.qty }));
+      },
+      sortByName: () => this.sortBy('name'), sortByBarcode: () => this.sortBy('barcode'),
+      sortByCost: () => this.sortBy('cost'), sortByPrice: () => this.sortBy('price'), sortByStock: () => this.sortBy('stock'),
+      ind: ind,
+      // header filter popovers
+      catOpen: s.openFilter === 'cat', statusOpen: s.openFilter === 'status',
+      toggleCatFilter: (e) => { e.stopPropagation(); this.setState({ openFilter: s.openFilter === 'cat' ? null : 'cat' }); },
+      toggleStatusFilter: (e) => { e.stopPropagation(); this.setState({ openFilter: s.openFilter === 'status' ? null : 'status' }); },
+      catFilterCol: s.invCat !== 'ทั้งหมด' ? '#E89B2D' : '#CBDEDB',
+      catFilterFill: s.invCat !== 'ทั้งหมด' ? '#E89B2D' : 'none',
+      statusFilterCol: s.invStatus !== 'ทั้งหมด' ? '#E89B2D' : '#CBDEDB',
+      statusFilterFill: s.invStatus !== 'ทั้งหมด' ? '#E89B2D' : 'none',
+      catMenu: ['ทั้งหมด', ...CATS].map(c => menuItem(c === 'ทั้งหมด' ? 'ทุกหมวด' : c, s.invCat === c, () => this.setState({ invCat: c, openFilter: null }))),
+      statusMenu: ['ทั้งหมด', 'มีของ', 'ใกล้หมด', 'หมด'].map(c => menuItem(c === 'ทั้งหมด' ? 'ทุกสถานะ' : c, s.invStatus === c, () => this.setState({ invStatus: c, openFilter: null }))),
+      anyFilter: s.invCat !== 'ทั้งหมด' || s.invStatus !== 'ทั้งหมด' || !!s.sortKey || !!s.invQ,
+      clearFilters: () => this.setState({ invCat: 'ทั้งหมด', invStatus: 'ทั้งหมด', sortKey: null, invQ: '', openFilter: null }),
+      // product form modal
+      invModalOpen: s.invModal !== null, closeInv: () => this.setState({ invModal: null }),
+      invModalTitle: s.invModal === 'new' ? 'เพิ่มสินค้าใหม่' : 'แก้ไขสินค้า',
+      saveLabel: s.invModal === 'new' ? 'เพิ่มสินค้า' : 'บันทึกการแก้ไข',
+      fName: s.form.name ?? '', fBarcode: s.form.barcode ?? '', fCat: s.form.cat ?? CATS[0],
+      fCost: s.form.cost ?? '', fPrice: s.form.price ?? '', fStock: s.form.stock ?? '',
+      setFName: this.setF('name'), setFBarcode: this.setF('barcode'), setFCat: this.setF('cat'),
+      setFCost: this.setF('cost'), setFPrice: this.setF('price'), setFStock: this.setF('stock'),
+      saveForm: this.saveForm, formError: s.formError, catList: CATS,
+      // restock
+      restockOpen: !!restockP, restockName: restockP ? restockP.name : '', restockCur: restockP ? restockP.stock : 0,
+      restockQty: s.restockQty, setRestockQty: (e) => this.setState({ restockQty: e.target.value }),
+      rQuick10: () => this.setState({ restockQty: String((parseInt(s.restockQty) || 0) + 10) }),
+      rQuick24: () => this.setState({ restockQty: String((parseInt(s.restockQty) || 0) + 24) }),
+      rQuick50: () => this.setState({ restockQty: String((parseInt(s.restockQty) || 0) + 50) }),
+      closeRestock: () => this.setState({ restockId: null }),
+      confirmRestock: () => {
+        const qty = parseInt(s.restockQty);
+        if (qty > 0) this.setState({ products: s.products.map(p => p.id === s.restockId ? { ...p, stock: p.stock + qty } : p), restockId: null });
+      },
+      // dashboard
+      dTodayText: this.fmt(todaySales), dBills: bills,
+      dVsText: (vs >= 0 ? '+' : '−') + this.fmt(Math.abs(vs)).slice(1) + ' ฿ เทียบเมื่อวาน',
+      dAvgText: this.fmt(bills ? todaySales / bills : 0),
+      dProfitText: this.fmt(todayProfit),
+      dMarginText: todaySales ? Math.round(todayProfit / todaySales * 100) + '%' : '0%',
+      lowCardBd: lowCount > 0 ? '#E5B7AE' : '#E0D3BD',
+      chartBars, top5,
+    };
+  }
+}
+</script>
+</body>
+</html>

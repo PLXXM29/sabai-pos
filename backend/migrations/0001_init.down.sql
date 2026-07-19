@@ -1,0 +1,13 @@
+DROP TABLE IF EXISTS audit_log;
+DROP TABLE IF EXISTS sync_log;
+DROP TABLE IF EXISTS bill_items;
+DROP TABLE IF EXISTS bills;
+DROP TABLE IF EXISTS bill_counters;
+DROP TABLE IF EXISTS stock_movements;
+DROP TABLE IF EXISTS inventory;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS stores;
+
+DROP FUNCTION IF EXISTS forbid_mutation();
+DROP FUNCTION IF EXISTS set_updated_at();
