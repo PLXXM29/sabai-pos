@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { El } from '../styled'
 import * as I from '../icons'
 import { TILES, CATS } from '../data'
+import { ProductArt } from '../productArt'
 import { db, type LocalProduct } from '../lib/db'
 import { pullCatalog, enqueueCheckout } from '../lib/sync'
 import { api } from '../lib/api'
@@ -133,8 +134,8 @@ export default function Cashier() {
                 <El key={p.id} as="button" onClick={() => add(p)}
                   s={`background:#fff;border:1.5px solid #E0D3BD;border-radius:14px;padding:0;cursor:${out ? 'not-allowed' : 'pointer'};opacity:${out ? 0.45 : 1};text-align:left;overflow:hidden;transition:transform .1s, border-color .12s;display:flex;flex-direction:column;`}
                   hover="border-color:#C2571F;transform:translateY(-2px);" active="transform:scale(.97);">
-                  <div style={{ height: 56, background: tile, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 24, color: tileCol, position: 'relative', width: '100%' }}>
-                    {p.name.trim()[0]}
+                  <div style={{ height: 62, background: tile, display: 'flex', alignItems: 'center', justifyContent: 'center', color: tileCol, position: 'relative', width: '100%' }}>
+                    <ProductArt name={p.name} cat={p.category} size={46} color={tileCol} />
                     {!out && p.qty_on_hand <= p.reorder_point && (
                       <span style={{ position: 'absolute', top: 5, right: 6, background: '#C23A2B', color: '#fff', fontSize: 10, borderRadius: 999, padding: '1px 7px', fontWeight: 600 }}>เหลือ {p.qty_on_hand}</span>
                     )}
@@ -166,7 +167,7 @@ export default function Cashier() {
             const [tile, tileCol] = tileOf(r.category)
             return (
               <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FBF7EF', border: '1px solid #EFE5D2', borderRadius: 12, padding: '7px 9px' }}>
-                <div style={{ width: 34, height: 34, borderRadius: 9, background: tile, color: tileCol, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>{r.name.trim()[0]}</div>
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: tile, color: tileCol, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><ProductArt name={r.name} cat={r.category} size={26} color={tileCol} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</div>
                   <div style={{ fontSize: 11, color: '#8A7A66', fontFamily: "'Space Grotesk',sans-serif" }}>{baht(r.price)}</div>

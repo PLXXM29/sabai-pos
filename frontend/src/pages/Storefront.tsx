@@ -5,6 +5,7 @@ import * as I from '../icons'
 import { CATS } from '../data'
 import { db, type LocalProduct } from '../lib/db'
 import { tileOf, statusOf } from '../lib/ui'
+import { ProductArt } from '../productArt'
 import { baht } from '../lib/format'
 
 export default function Storefront() {
@@ -51,8 +52,8 @@ export default function Storefront() {
             const st = statusOf(p.qty_on_hand, p.reorder_point)
             return (
               <El key={p.id} s="background:#fff;border:1.5px solid #E0D3BD;border-radius:16px;overflow:hidden;transition:transform .12s, border-color .12s;" hover="transform:translateY(-3px);border-color:#C2571F;">
-                <div style={{ height: 92, background: tile, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 36, color: tileCol, position: 'relative' }}>
-                  {p.name.trim()[0]}
+                <div style={{ height: 92, background: tile, display: 'flex', alignItems: 'center', justifyContent: 'center', color: tileCol, position: 'relative' }}>
+                  <ProductArt name={p.name} cat={p.category} size={64} color={tileCol} />
                   <span style={{ position: 'absolute', top: 8, left: 8, background: st.bg, color: st.col, fontSize: 11, fontWeight: 600, borderRadius: 999, padding: '2px 9px' }}>{st.t}</span>
                 </div>
                 <div style={{ padding: '10px 12px 12px 12px' }}>

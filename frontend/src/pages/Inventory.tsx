@@ -5,6 +5,7 @@ import * as I from '../icons'
 import { CATS } from '../data'
 import { db, type LocalProduct } from '../lib/db'
 import { tileOf, statusOf } from '../lib/ui'
+import { ProductArt } from '../productArt'
 import { baht } from '../lib/format'
 import { api, ApiError } from '../lib/api'
 import { pullCatalog } from '../lib/sync'
@@ -192,7 +193,7 @@ export default function Inventory() {
               return (
                 <El key={p.id} as="tr" s="border-bottom:1px solid #F0E7D6;" hover="background:#FBF7EF;">
                   <td style={{ padding: '6px 8px 6px 14px' }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 9, background: tile, color: tileCol, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15 }}>{p.name.trim()[0]}</div>
+                    <div style={{ width: 34, height: 34, borderRadius: 9, background: tile, color: tileCol, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><ProductArt name={p.name} cat={p.category} size={26} color={tileCol} /></div>
                   </td>
                   <td style={{ padding: '6px 8px', fontWeight: 600 }}>{p.name}</td>
                   <td style={{ padding: '6px 8px', fontFamily: "'Space Grotesk',sans-serif", color: '#8A7A66', fontSize: 12 }}>{p.barcode}</td>
