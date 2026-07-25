@@ -8,10 +8,21 @@ type P = {
   fill?: string
   sw?: number
   style?: CSSProperties
+  className?: string
   children?: ReactNode
 }
 
-function Svg({ size = 18, w, h, stroke = 'currentColor', fill = 'none', sw = 2, style, children }: P) {
+function Svg({
+  size = 18,
+  w,
+  h,
+  stroke = 'currentColor',
+  fill = 'none',
+  sw = 2,
+  style,
+  className,
+  children,
+}: P) {
   return (
     <svg
       width={w ?? size}
@@ -23,6 +34,7 @@ function Svg({ size = 18, w, h, stroke = 'currentColor', fill = 'none', sw = 2, 
       strokeLinecap="round"
       strokeLinejoin="round"
       style={style}
+      className={className}
     >
       {children}
     </svg>

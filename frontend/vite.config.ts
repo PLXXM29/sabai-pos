@@ -16,9 +16,9 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api/],
       },
       manifest: {
-        name: 'MiniMart POS',
-        short_name: 'MiniMart',
-        description: 'ระบบขายหน้าร้านมินิมาร์ท (offline-first)',
+        name: 'Sabai POS · ระบบขายหน้าร้าน',
+        short_name: 'Sabai POS',
+        description: 'ระบบขายหน้าร้านสำหรับร้านโชห่วยและมินิมาร์ท ขายต่อได้แม้เน็ตหลุด',
         lang: 'th',
         theme_color: '#0F3B39',
         background_color: '#F7F1E6',

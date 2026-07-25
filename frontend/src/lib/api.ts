@@ -52,6 +52,27 @@ async function request<T>(path: string, opts: RequestInit = {}, retry = true): P
 
 export type User = { id: string; username: string; role: string; store_id: string }
 
+/** A published sign-in for the public demo. Absent on a real deployment. */
+export type DemoAccount = {
+  username: string
+  password: string
+  role: string
+  label: string
+  description: string
+}
+
+/**
+ * What kind of deployment is this bundle talking to? Asked at runtime rather
+ * than baked in at build time, so the exact same build serves a shop and the
+ * showcase.
+ */
+export type DeploymentMeta = {
+  version: string
+  demo: boolean
+  accounts?: DemoAccount[]
+  reset_every?: string
+}
+
 export type ServerProduct = {
   id: string
   name: string
@@ -79,6 +100,13 @@ export type BillResponse = {
 
 export const api = {
   base: API_BASE,
+  async meta() {
+    return request<DeploymentMeta>('/meta')
+  },
+  /** Rebuilds the showcase dataset. Only routed when the server is in demo mode. */
+  async resetDemo() {
+    return request<{ status: string }>('/demo/reset', { method: 'POST' })
+  },
   async login(username: string, password: string) {
     const d = await request<{ access_token: string; user: User }>('/auth/login', {
       method: 'POST',
@@ -131,6 +159,23 @@ export const api = {
   },
   async checkout(payload: CheckoutPayload) {
     return request<BillResponse>('/bills', { method: 'POST', body: JSON.stringify(payload) })
+  },
+  // Auto-confirm transfer: open an intent, poll its status, cancel if abandoned.
+  async createPayment(amount: number, billClientUUID?: string) {
+    return request<{ id: string; amount: number; status: string }>('/payments', {
+      method: 'POST',
+      body: JSON.stringify({ amount, bill_client_uuid: billClientUUID }),
+    })
+  },
+  async getPayment(id: string) {
+    return request<{ id: string; status: string; amount: number }>(`/payments/${id}`)
+  },
+  async cancelPayment(id: string) {
+    try {
+      await request(`/payments/${id}/cancel`, { method: 'POST' })
+    } catch {
+      /* best effort */
+    }
   },
   // Fetch the receipt HTML WITH auth (a plain tab navigation can't send the
   // Bearer token, so we fetch then open it as a blob).

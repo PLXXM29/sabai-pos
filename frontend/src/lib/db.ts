@@ -50,7 +50,7 @@ class MiniDB extends Dexie {
   meta!: Table<Meta, string>
 
   constructor() {
-    super('minimart-pos')
+    super('sabai-pos')
     this.version(1).stores({
       products: 'id, barcode, category, is_active',
       pending: '++localId, status, client_uuid',

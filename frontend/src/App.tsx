@@ -5,6 +5,7 @@ import { El } from './styled'
 import * as I from './icons'
 import { db } from './lib/db'
 import { useAuth, RequireAuth } from './lib/auth'
+import { useMeta } from './lib/meta'
 import Login from './pages/Login'
 import Cashier from './pages/Cashier'
 import Storefront from './pages/Storefront'
@@ -29,6 +30,7 @@ function useOnline() {
 function Sidebar() {
   const { user, logout } = useAuth()
   const online = useOnline()
+  const meta = useMeta()
   const pending = useLiveQuery(() => db.pending.where('status').equals('pending').count(), [], 0)
 
   const link = (to: string, label: string, icon: JSX.Element, end?: boolean) => (
@@ -50,7 +52,7 @@ function Sidebar() {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ color: '#F7F1E6', fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>มาร์ทมงคลชัย</div>
-          <div style={{ color: '#7FA9A4', fontSize: 11, fontFamily: "'Space Grotesk',sans-serif" }}>POS · v2.4</div>
+          <div style={{ color: '#7FA9A4', fontSize: 11, fontFamily: "'Space Grotesk',sans-serif" }}>Sabai POS</div>
         </div>
       </div>
       {link('/', 'แคชเชียร์', <I.CartIcon w={18} h={18} style={{ flexShrink: 0 }} />, true)}
@@ -67,6 +69,11 @@ function Sidebar() {
         </div>
         {(pending ?? 0) > 0 && (
           <div style={{ fontSize: 11, color: '#E4D3B4' }}>รอ sync {pending} บิล</div>
+        )}
+        {/* A visitor who followed a portfolio link should never have to wonder
+            whether the numbers on screen belong to a real shop. */}
+        {meta?.demo && (
+          <div style={{ fontSize: 11, color: '#E89B2D', fontWeight: 600 }}>โหมดสาธิต</div>
         )}
       </div>
 
@@ -89,17 +96,6 @@ function Layout() {
     <div style={{ display: 'flex', height: '100vh', fontFamily: "'IBM Plex Sans Thai',sans-serif", color: '#2B2420', background: '#F7F1E6', overflow: 'hidden' }}>
       <Sidebar />
       <Outlet />
-    </div>
-  )
-}
-
-function ComingSoon({ title }: { title: string }) {
-  return (
-    <div style={{ flex: 1, display: 'grid', placeItems: 'center', color: '#8A7A66', textAlign: 'center' }}>
-      <div>
-        <div style={{ fontSize: 20, fontWeight: 700, color: '#0F3B39', marginBottom: 6 }}>{title}</div>
-        <div style={{ fontSize: 13 }}>กำลังพัฒนา — Phase 3b</div>
-      </div>
     </div>
   )
 }

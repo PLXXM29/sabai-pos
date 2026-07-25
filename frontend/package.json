@@ -1,9 +1,9 @@
 {
-  "name": "minimart-pos",
+  "name": "sabai-pos-web",
   "private": true,
   "version": "2.4.0",
   "type": "module",
-  "description": "MiniMart POS — ระบบขายหน้าร้านสำหรับมินิมาร์ท (Vite + React + TypeScript)",
+  "description": "Sabai POS — ระบบขายหน้าร้านแบบ offline-first (Vite + React + TypeScript)",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -14,6 +14,7 @@
     "@tanstack/react-query": "^5.101.2",
     "dexie": "^4.4.4",
     "dexie-react-hooks": "^4.4.0",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.18.1",

@@ -36,6 +36,338 @@ textarea {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+/* ── sign-in screen ─────────────────────────────────────────────────────────
+   The one screen a first-time visitor always sees, so it doubles as the
+   product's front door: what this is on the left, how to get in on the right.
+   Written as real CSS rather than the inline styles used elsewhere in the app
+   because it is the only screen with a responsive breakpoint and hover states
+   worth having. */
+.signin {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  font-family: 'IBM Plex Sans Thai', sans-serif;
+  color: #2b2420;
+  background:
+    radial-gradient(60rem 40rem at 15% -10%, #fff8ea 0%, rgba(255, 248, 234, 0) 60%),
+    radial-gradient(50rem 34rem at 100% 100%, #eef3ea 0%, rgba(238, 243, 234, 0) 55%), #f7f1e6;
+}
+.signin__panel {
+  width: min(940px, 100%);
+  display: grid;
+  grid-template-columns: 1.02fr 0.98fr;
+  background: #fff;
+  border: 1.5px solid #e0d3bd;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 28px 64px rgba(15, 59, 57, 0.14);
+  animation: fadeIn 0.35s ease both;
+}
+.signin__panel--solo {
+  grid-template-columns: 1fr;
+  width: min(400px, 100%);
+}
+.signin__pitch {
+  background: #0f3b39;
+  background-image: radial-gradient(28rem 20rem at 110% -10%, #17706a 0%, rgba(23, 112, 106, 0) 60%);
+  color: #cbdeda;
+  padding: 34px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.signin__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.signin__mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #e89b2d;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.14);
+}
+.signin__wordmark {
+  color: #fff;
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.25;
+}
+.signin__tagline {
+  color: #7fa9a4;
+  font-size: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: 0.02em;
+}
+.signin__lede {
+  font-size: 14px;
+  line-height: 1.75;
+  margin: 0;
+  color: #d8e7e4;
+}
+.signin__features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.signin__features li {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #b9d2ce;
+}
+.signin__features b {
+  color: #fff;
+  font-weight: 600;
+}
+.signin__tick {
+  color: #e89b2d;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.signin__stack {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 6px;
+}
+.signin__chip {
+  font-size: 11px;
+  font-family: 'Space Grotesk', sans-serif;
+  color: #9fc3bf;
+  border: 1px solid #1d5a56;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.signin__form {
+  padding: 30px 30px 26px;
+  display: flex;
+  flex-direction: column;
+}
+.signin__badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #fdf0d8;
+  color: #8a5a12;
+  border: 1px solid #f0d8a8;
+  border-radius: 999px;
+  padding: 5px 12px 5px 9px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.signin__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e89b2d;
+  box-shadow: 0 0 0 3px rgba(232, 155, 45, 0.25);
+}
+.signin__h {
+  margin: 14px 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f3b39;
+}
+.signin__sub {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #8a7a66;
+}
+.role {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: #fffdf8;
+  border: 1.5px solid #e6dac6;
+  border-radius: 14px;
+  padding: 11px 13px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.role + .role {
+  margin-top: 8px;
+}
+.role:hover:not(:disabled) {
+  border-color: #c2571f;
+  background: #fff7ec;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(194, 87, 31, 0.13);
+}
+.role:focus-visible {
+  outline: 2px solid #c2571f;
+  outline-offset: 2px;
+}
+.role:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.role__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 14px;
+  color: #0f3b39;
+}
+.role__body {
+  min-width: 0;
+  display: block;
+}
+.role__label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2b2420;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.role__role {
+  font-size: 10.5px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  color: #8a7a66;
+  border: 1px solid #e0d3bd;
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+.role__desc {
+  display: block;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #8a7a66;
+  margin-top: 2px;
+}
+.role__go {
+  margin-left: auto;
+  color: #c2571f;
+  flex-shrink: 0;
+}
+.signin__manual {
+  margin-top: 16px;
+  border-top: 1px solid #ece1cd;
+  padding-top: 14px;
+}
+.signin__manual > summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #17706a;
+  list-style: none;
+}
+.signin__manual > summary::-webkit-details-marker {
+  display: none;
+}
+.signin__manual > summary::before {
+  content: '+ ';
+}
+.signin__manual[open] > summary::before {
+  content: '– ';
+}
+.signin__manual > summary:hover {
+  color: #c2571f;
+}
+.signin__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 12px;
+}
+.signin__input {
+  width: 100%;
+  border: 1.5px solid #e0d3bd;
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 15px;
+  background: #fff;
+  color: #2b2420;
+  outline: none;
+}
+.signin__input:focus {
+  border-color: #c2571f;
+}
+.signin__submit {
+  border: none;
+  background: #c2571f;
+  color: #fff;
+  border-radius: 999px;
+  padding: 12px 0;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #9c4517;
+}
+.signin__submit:disabled {
+  background: #d8c9b0;
+  box-shadow: 0 3px 0 #c0b096;
+  cursor: default;
+}
+.signin__err {
+  color: #c23a2b;
+  font-size: 13px;
+  font-weight: 600;
+}
+.signin__foot {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #ece1cd;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: #a2937c;
+}
+.signin__link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #17706a;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.signin__link:hover {
+  color: #c2571f;
+}
+@media (max-width: 860px) {
+  .signin__panel {
+    grid-template-columns: 1fr;
+  }
+  .signin__pitch {
+    padding: 26px 24px;
+    gap: 16px;
+  }
+  .signin__features li:nth-child(n + 4) {
+    display: none;
+  }
+  .signin__form {
+    padding: 24px 24px 22px;
+  }
+}
+
 @keyframes popIn {
   0% {
     transform: scale(0.92);

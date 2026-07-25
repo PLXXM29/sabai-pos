@@ -1,6 +1,9 @@
 // ─────────────────────────────────────────────────────────────────────────
-// MiniMart POS — seed data & domain types
-// (ported verbatim from the MiniMart POS design)
+// Sabai POS — presentation constants and domain types.
+//
+// The product list here is the original design mock. Live product data comes
+// from the API (and IndexedDB when offline); what is still used from this file
+// is the category list and the tile palette that colours the cashier grid.
 // ─────────────────────────────────────────────────────────────────────────
 
 export type Product = {
