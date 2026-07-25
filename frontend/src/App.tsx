@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { El } from './styled'
 import * as I from './icons'
 import { db } from './lib/db'
-import { useAuth, RequireAuth } from './lib/auth'
+import { useAuth, RequireAuth, canManage } from './lib/auth'
 import { useMeta } from './lib/meta'
 import Login from './pages/Login'
 import Cashier from './pages/Cashier'
@@ -58,7 +58,11 @@ function Sidebar() {
       {link('/', 'แคชเชียร์', <I.CartIcon w={18} h={18} style={{ flexShrink: 0 }} />, true)}
       {link('/store', 'หน้าร้าน', <I.StoreIcon w={18} h={18} style={{ flexShrink: 0 }} />)}
       {link('/inventory', 'สต็อกสินค้า', <I.BoxIcon w={18} h={18} style={{ flexShrink: 0 }} />)}
-      {link('/dashboard', 'แดชบอร์ด', <I.ChartIcon w={18} h={18} style={{ flexShrink: 0 }} />)}
+      {/* Offering a cashier a link the server will refuse reads as a broken
+          page, not as a locked door. The route still exists and still explains
+          itself if reached directly — the server is what enforces this. */}
+      {canManage(user?.role) &&
+        link('/dashboard', 'แดชบอร์ด', <I.ChartIcon w={18} h={18} style={{ flexShrink: 0 }} />)}
       <div style={{ flex: 1 }} />
 
       {/* connection + sync status */}

@@ -1,20 +1,49 @@
 import { useQuery } from '@tanstack/react-query'
-import { api } from '../lib/api'
+import { ApiError, api } from '../lib/api'
+import { useAuth } from '../lib/auth'
 import { baht } from '../lib/format'
 
 const DOW = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.']
 
+const isForbidden = (err: unknown) => err instanceof ApiError && err.status === 403
+
+// "You are not allowed" is a final answer, not a hiccup. Retrying it three
+// times with backoff would leave a cashier staring at an empty dashboard for
+// several seconds before being told why — which reads as a broken page.
+const stopOnForbidden = {
+  retry: (attempt: number, err: unknown) => !isForbidden(err) && attempt < 2,
+}
+
 export default function Dashboard() {
-  const summary = useQuery({ queryKey: ['summary'], queryFn: api.summary })
-  const top = useQuery({ queryKey: ['top'], queryFn: () => api.topProducts(5) })
-  const daily = useQuery({ queryKey: ['daily'], queryFn: () => api.salesDaily(7) })
+  const { user } = useAuth()
+  const summary = useQuery({ queryKey: ['summary'], queryFn: api.summary, ...stopOnForbidden })
+  const top = useQuery({ queryKey: ['top'], queryFn: () => api.topProducts(5), ...stopOnForbidden })
+  const daily = useQuery({ queryKey: ['daily'], queryFn: () => api.salesDaily(7), ...stopOnForbidden })
 
   if (summary.isError) {
+    const denied = isForbidden(summary.error)
     return (
-      <div style={{ flex: 1, display: 'grid', placeItems: 'center', color: '#8A7A66', textAlign: 'center' }}>
-        <div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#0F3B39', marginBottom: 6 }}>ดูแดชบอร์ดไม่ได้</div>
-          <div style={{ fontSize: 13 }}>ต้องเป็นผู้จัดการขึ้นไป</div>
+      <div style={{ flex: 1, display: 'grid', placeItems: 'center', padding: 24 }}>
+        <div style={{ maxWidth: 440, textAlign: 'center', color: '#8A7A66' }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#0F3B39', marginBottom: 8 }}>
+            {denied ? 'บัญชีนี้ดูรายงานไม่ได้' : 'ดึงข้อมูลรายงานไม่สำเร็จ'}
+          </div>
+          {denied ? (
+            <div style={{ fontSize: 13.5, lineHeight: 1.75 }}>
+              ยอดขาย กำไร และต้นทุน เปิดให้เฉพาะผู้จัดการขึ้นไป
+              <br />
+              บัญชี <b style={{ color: '#2B2420' }}>{user?.username}</b> มีสิทธิ์{' '}
+              <b style={{ color: '#2B2420' }}>{user?.role}</b> เซิร์ฟเวอร์จึงตอบกลับ{' '}
+              <b style={{ color: '#C23A2B' }}>403</b> — ไม่ใช่แค่ซ่อนปุ่มไว้ที่หน้าจอ
+              <div style={{ marginTop: 14, fontSize: 12.5, color: '#B5A88F' }}>
+                อยากดูรายงาน? ออกจากระบบแล้วเข้าใหม่ด้วยบทบาทเจ้าของร้านหรือผู้จัดการ
+              </div>
+            </div>
+          ) : (
+            <div style={{ fontSize: 13.5, lineHeight: 1.75 }}>
+              ลองใหม่อีกครั้ง หรือตรวจการเชื่อมต่ออินเทอร์เน็ต
+            </div>
+          )}
         </div>
       </div>
     )
