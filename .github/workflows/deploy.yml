@@ -25,7 +25,6 @@ permissions:
   id-token: write # required for OIDC
 
 env:
-  IMAGE: ghcr.io/${{ github.repository }}
   RESOURCE_GROUP: rg-sabai-pos
   CONTAINER_APP: sabai-pos
 
@@ -37,7 +36,12 @@ jobs:
 
       - name: Identify this build
         id: build
-        run: echo "version=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          # Registries reject uppercase in a repository name, and a GitHub
+          # account name is free to contain it — so github.repository cannot be
+          # used verbatim as an image reference.
+          echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v3
 
@@ -55,8 +59,8 @@ jobs:
           # Tag by commit as well as latest: Container Apps creates a new
           # revision when the image reference changes, and `latest` never does.
           tags: |
-            ${{ env.IMAGE }}:${{ github.sha }}
-            ${{ env.IMAGE }}:latest
+            ${{ steps.build.outputs.image }}:${{ github.sha }}
+            ${{ steps.build.outputs.image }}:latest
           build-args: |
             VERSION=${{ steps.build.outputs.version }}
           cache-from: type=gha
@@ -77,7 +81,7 @@ jobs:
             az containerapp update \
               --name '${{ env.CONTAINER_APP }}' \
               --resource-group '${{ env.RESOURCE_GROUP }}' \
-              --image '${{ env.IMAGE }}:${{ github.sha }}' \
+              --image '${{ steps.build.outputs.image }}:${{ github.sha }}' \
               --set-env-vars APP_VERSION='${{ steps.build.outputs.version }}' \
               --output none
             url="https://$(az containerapp show \
