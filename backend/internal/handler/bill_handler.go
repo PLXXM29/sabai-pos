@@ -8,10 +8,10 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 
-	"minimart-pos/backend/internal/domain"
-	"minimart-pos/backend/internal/middleware"
-	"minimart-pos/backend/internal/receipt"
-	"minimart-pos/backend/internal/service"
+	"sabai-pos/backend/internal/domain"
+	"sabai-pos/backend/internal/middleware"
+	"sabai-pos/backend/internal/receipt"
+	"sabai-pos/backend/internal/service"
 )
 
 type BillHandler struct {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"minimart-pos/backend/internal/store"
+	"sabai-pos/backend/internal/store"
 )
 
 type ReportService struct {

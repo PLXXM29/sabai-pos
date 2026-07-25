@@ -1,4 +1,5 @@
-// Command api is the MiniMart POS HTTP server entrypoint.
+// Command api is the Sabai POS server: HTTP API, schema migrations and the
+// compiled web UI in a single binary, so a deployment is one container.
 package main
 
 import (
@@ -16,10 +17,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 
-	"minimart-pos/backend/internal/api"
-	"minimart-pos/backend/internal/config"
-	"minimart-pos/backend/internal/logger"
-	"minimart-pos/backend/internal/store"
+	"sabai-pos/backend/internal/api"
+	"sabai-pos/backend/internal/config"
+	"sabai-pos/backend/internal/dbmigrate"
+	"sabai-pos/backend/internal/demo"
+	"sabai-pos/backend/internal/logger"
+	"sabai-pos/backend/internal/store"
+	"sabai-pos/backend/internal/web"
 )
 
 func main() {
@@ -41,20 +45,55 @@ func main() {
 
 	// 3. Database pool.
 	rootCtx := context.Background()
-	pool, err := connectDB(rootCtx, cfg)
+	pool, err := connectDB(rootCtx, cfg, log)
 	if err != nil {
 		log.Fatal("database connection failed", zap.Error(err))
 	}
 	defer pool.Close()
 	log.Info("database connected", zap.Int32("max_conns", cfg.DBMaxConns))
 
-	// 4. Router.
+	// 4. Schema. Migrated in-process because the deployment target has no
+	// separate migrate step; golang-migrate's advisory lock keeps that safe when
+	// more than one replica boots at once.
+	if cfg.AutoMigrate {
+		version, changed, err := dbmigrate.Up(cfg.DatabaseURL)
+		if err != nil {
+			log.Fatal("migration failed", zap.Error(err))
+		}
+		log.Info("schema ready", zap.Uint("version", version), zap.Bool("migrated", changed))
+	}
+
+	db := store.NewDB(pool)
+
+	// 5. Demo dataset. This path only ever populates an empty database; wiping a
+	// populated one is an explicit POST to /api/v1/demo/reset or the timer below.
+	if cfg.DemoMode {
+		seeder := demo.New(pool)
+		res, seeded, err := seeder.Ensure(rootCtx, demo.DefaultHistoryDays)
+		if err != nil {
+			log.Fatal("demo seed failed", zap.Error(err))
+		}
+		if seeded {
+			log.Info("demo dataset created",
+				zap.Int("products", res.Products), zap.Int("bills", res.Bills),
+				zap.Int("history_days", res.HistoryDays), zap.String("took", res.Took))
+		}
+		if cfg.DemoResetEvery > 0 {
+			go resetPeriodically(rootCtx, seeder, cfg.DemoResetEvery, log)
+		}
+	}
+
+	// 6. Router.
 	if cfg.IsProduction() {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	router := api.NewRouter(cfg, log, store.NewDB(pool))
+	router := api.NewRouter(cfg, log, db)
+	if cfg.ServeUI && !web.Bundled() {
+		log.Warn("no UI bundled in this binary — serving the API only " +
+			"(build the frontend first, or set SERVE_UI=false)")
+	}
 
-	// 5. HTTP server with graceful shutdown.
+	// 7. HTTP server with graceful shutdown.
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
 		Handler:           router,
@@ -62,7 +101,9 @@ func main() {
 	}
 
 	go func() {
-		log.Info("http server listening", zap.String("port", cfg.Port), zap.String("env", cfg.AppEnv))
+		log.Info("http server listening",
+			zap.String("port", cfg.Port), zap.String("env", cfg.AppEnv),
+			zap.Bool("ui", cfg.ServeUI && web.Bundled()), zap.Bool("demo", cfg.DemoMode))
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal("http server error", zap.Error(err))
 		}
@@ -82,14 +123,42 @@ func main() {
 	log.Info("server stopped cleanly")
 }
 
-func connectDB(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
+// connectDB dials the database, retrying briefly. The retry is not defensive
+// padding: the demo runs on serverless Postgres that suspends when idle, and a
+// cold start can outlast a single connect timeout. Failing the boot on that
+// would turn a two-second wake-up into a crash loop.
+func connectDB(ctx context.Context, cfg *config.Config, log *zap.Logger) (*pgxpool.Pool, error) {
 	poolCfg, err := pgxpool.ParseConfig(cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
 	}
 	poolCfg.MaxConns = cfg.DBMaxConns
 
-	ctx, cancel := context.WithTimeout(ctx, cfg.DBConnTimeout)
+	const attempts = 5
+	var lastErr error
+	for attempt := 1; attempt <= attempts; attempt++ {
+		pool, err := openPool(ctx, poolCfg, cfg.DBConnTimeout)
+		if err == nil {
+			return pool, nil
+		}
+		lastErr = err
+		if attempt == attempts {
+			break
+		}
+		wait := time.Duration(attempt) * time.Second
+		log.Warn("database not ready, retrying",
+			zap.Int("attempt", attempt), zap.Duration("in", wait), zap.Error(err))
+		select {
+		case <-time.After(wait):
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+	return nil, lastErr
+}
+
+func openPool(ctx context.Context, poolCfg *pgxpool.Config, timeout time.Duration) (*pgxpool.Pool, error) {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
@@ -101,4 +170,25 @@ func connectDB(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 	return pool, nil
+}
+
+// resetPeriodically returns the shared demo to its designed state on a timer, so
+// yesterday's visitors do not decide what today's visitors see.
+func resetPeriodically(ctx context.Context, seeder *demo.Seeder, every time.Duration, log *zap.Logger) {
+	ticker := time.NewTicker(every)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			res, err := seeder.Reset(ctx, demo.DefaultHistoryDays)
+			if err != nil {
+				log.Error("scheduled demo reset failed", zap.Error(err))
+				continue
+			}
+			log.Info("demo dataset reset on schedule",
+				zap.Int("bills", res.Bills), zap.String("took", res.Took))
+		}
+	}
 }

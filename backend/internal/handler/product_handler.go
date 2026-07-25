@@ -7,9 +7,9 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"minimart-pos/backend/internal/domain"
-	"minimart-pos/backend/internal/middleware"
-	"minimart-pos/backend/internal/service"
+	"sabai-pos/backend/internal/domain"
+	"sabai-pos/backend/internal/middleware"
+	"sabai-pos/backend/internal/service"
 )
 
 type ProductHandler struct {

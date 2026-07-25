@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"minimart-pos/backend/internal/middleware"
-	"minimart-pos/backend/internal/service"
+	"sabai-pos/backend/internal/middleware"
+	"sabai-pos/backend/internal/service"
 )
 
 type ReportHandler struct {

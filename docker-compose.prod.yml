@@ -1,11 +1,13 @@
-# Production stack: nginx serves the built SPA and proxies /api to the backend.
-# Only the web tier is published; db and backend stay on the internal network.
+# Self-hosted production stack: the app container and its database, nothing else.
 #
-#   cp .env.example .env   # set STRONG secrets + APP_ENV=production
+#   cp .env.example .env      # APP_ENV=production + STRONG secrets
 #   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml run --rm --entrypoint /seed app
 #
-# NOTE: put a TLS-terminating reverse proxy in front (the refresh cookie is
-# Secure in production and only travels over HTTPS). See docs/deploy.md.
+# The app serves the UI and the API on one port and migrates its own schema, so
+# there is no nginx tier and no migrate job here. Put a TLS-terminating proxy in
+# front of it (Caddy is two lines — see docs/deploy.md): the refresh cookie is
+# Secure in production and will not travel over plain HTTP.
 services:
   db:
     image: postgres:16-alpine
@@ -22,49 +24,29 @@ services:
       timeout: 3s
       retries: 20
 
-  migrate:
-    image: migrate/migrate:v4.18.1
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - ./backend/migrations:/migrations:ro
-    command:
-      - "-path"
-      - "/migrations"
-      - "-database"
-      - "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable"
-      - "up"
-    restart: "no"
-
-  backend:
+  app:
     build:
-      context: ./backend
+      context: .
+      args:
+        VERSION: ${APP_VERSION:-selfhosted}
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
     environment:
       APP_ENV: production
       HTTP_PORT: "8080"
       DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable"
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-    expose:
-      - "8080"
-
-  frontend:
-    build:
-      context: ./frontend
-    restart: unless-stopped
-    depends_on:
-      - backend
+      # A real shop is never a demo: no published logins, no reset endpoint.
+      DEMO_MODE: "false"
+      PAYMENT_NOTIFY_SECRET: ${PAYMENT_NOTIFY_SECRET:-}
+      LINE_CHANNEL_SECRET: ${LINE_CHANNEL_SECRET:-}
+      LINE_AMOUNT_REGEX: ${LINE_AMOUNT_REGEX:-}
     ports:
-      - "${WEB_PORT:-8090}:80"
+      - "${WEB_PORT:-8090}:8080"
 
 volumes:
   pgdata:

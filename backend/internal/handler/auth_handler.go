@@ -6,11 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"minimart-pos/backend/internal/config"
-	"minimart-pos/backend/internal/domain"
-	"minimart-pos/backend/internal/middleware"
-	"minimart-pos/backend/internal/service"
-	"minimart-pos/backend/internal/store"
+	"sabai-pos/backend/internal/config"
+	"sabai-pos/backend/internal/domain"
+	"sabai-pos/backend/internal/middleware"
+	"sabai-pos/backend/internal/service"
+	"sabai-pos/backend/internal/store"
 )
 
 const refreshCookie = "refresh_token"

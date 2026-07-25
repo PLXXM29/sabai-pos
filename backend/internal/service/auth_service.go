@@ -9,10 +9,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"minimart-pos/backend/internal/auth"
-	"minimart-pos/backend/internal/config"
-	"minimart-pos/backend/internal/domain"
-	"minimart-pos/backend/internal/store"
+	"sabai-pos/backend/internal/auth"
+	"sabai-pos/backend/internal/config"
+	"sabai-pos/backend/internal/domain"
+	"sabai-pos/backend/internal/store"
 )
 
 type AuthService struct {

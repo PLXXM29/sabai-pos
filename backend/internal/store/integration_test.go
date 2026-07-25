@@ -21,10 +21,10 @@ import (
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	"minimart-pos/backend/internal/config"
-	"minimart-pos/backend/internal/domain"
-	"minimart-pos/backend/internal/service"
-	"minimart-pos/backend/internal/store"
+	"sabai-pos/backend/internal/config"
+	"sabai-pos/backend/internal/domain"
+	"sabai-pos/backend/internal/service"
+	"sabai-pos/backend/internal/store"
 )
 
 var (

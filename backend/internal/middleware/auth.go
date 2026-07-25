@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"minimart-pos/backend/internal/auth"
-	"minimart-pos/backend/internal/domain"
+	"sabai-pos/backend/internal/auth"
+	"sabai-pos/backend/internal/domain"
 )
 
 const (
@@ -54,6 +54,22 @@ func RequireRole(roles ...domain.Role) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if _, ok := allowed[UserRole(c)]; !ok {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "insufficient permission"})
+			return
+		}
+		c.Next()
+	}
+}
+
+// NotifySecret guards the payment-notification webhook with a shared secret
+// (the phone forwarder isn't a JWT client). Empty secret => feature disabled.
+func NotifySecret(secret string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if secret == "" {
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "payment notify not configured"})
+			return
+		}
+		if c.GetHeader("X-Notify-Secret") != secret {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "bad secret"})
 			return
 		}
 		c.Next()

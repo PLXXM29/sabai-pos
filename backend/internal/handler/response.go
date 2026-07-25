@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"minimart-pos/backend/internal/domain"
+	"sabai-pos/backend/internal/domain"
 )
 
 // writeError maps a domain error kind to an HTTP status. Unknown errors are

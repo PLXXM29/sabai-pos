@@ -1,0 +1,9 @@
+# The real contents of this directory are build output: the Docker build drops
+# the Vite bundle here before compiling, and `make ui` does the same locally.
+# Only the placeholder page is tracked, so `go build ./...` works without Node.
+#
+# After `make ui` the placeholder will show as modified — `make ui-reset` puts
+# it back.
+*
+!.gitignore
+!index.html

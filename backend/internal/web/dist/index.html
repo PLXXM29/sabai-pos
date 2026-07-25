@@ -1,0 +1,57 @@
+<!doctype html>
+<!--
+  Placeholder. The Docker build replaces this whole directory with the Vite
+  output (see the Dockerfile's `web` stage), so this page is only ever reached by
+  a backend-only build — `go run ./cmd/api` without `make ui`.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sabai POS API</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #f7f1e6;
+        color: #2b2420;
+        font: 15px/1.7 ui-sans-serif, system-ui, sans-serif;
+      }
+      main {
+        max-width: 30rem;
+        padding: 2rem;
+      }
+      h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.25rem;
+        color: #0f3b39;
+      }
+      code {
+        background: #ebe0cc;
+        border-radius: 4px;
+        padding: 0.1em 0.4em;
+        font-size: 0.9em;
+      }
+      a {
+        color: #c2571f;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Sabai POS — API is running</h1>
+      <p>
+        This build does not bundle the user interface. Build it with
+        <code>make ui</code> (or <code>npm run build</code> in
+        <code>frontend/</code>) and restart, or run the Vite dev server on
+        <code>:5173</code>, which proxies <code>/api</code> here.
+      </p>
+      <p>
+        Health: <a href="/healthz">/healthz</a> ·
+        <a href="/readyz">/readyz</a>
+      </p>
+    </main>
+  </body>
+</html>
