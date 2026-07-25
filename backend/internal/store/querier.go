@@ -13,12 +13,14 @@ import (
 type Querier interface {
 	// Applies a delta to the cached on-hand (source of truth is stock_movements).
 	AddInventoryQty(ctx context.Context, arg AddInventoryQtyParams) (Inventory, error)
+	CancelPayment(ctx context.Context, arg CancelPaymentParams) error
 	CountUsersInStore(ctx context.Context, storeID uuid.UUID) (int64, error)
 	CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) error
 	CreateBill(ctx context.Context, arg CreateBillParams) (Bill, error)
 	CreateBillItem(ctx context.Context, arg CreateBillItemParams) (BillItem, error)
 	CreateInventory(ctx context.Context, arg CreateInventoryParams) (Inventory, error)
 	CreateMovement(ctx context.Context, arg CreateMovementParams) (StockMovement, error)
+	CreatePayment(ctx context.Context, arg CreatePaymentParams) (Payment, error)
 	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
 	CreateStore(ctx context.Context, arg CreateStoreParams) (Store, error)
@@ -34,6 +36,7 @@ type Querier interface {
 	// Locks the row so a concurrent sale of the same product can't oversell.
 	GetInventoryForUpdate(ctx context.Context, productID uuid.UUID) (Inventory, error)
 	GetMovementByClientUUID(ctx context.Context, arg GetMovementByClientUUIDParams) (StockMovement, error)
+	GetPayment(ctx context.Context, arg GetPaymentParams) (Payment, error)
 	GetProduct(ctx context.Context, arg GetProductParams) (Product, error)
 	GetProductByBarcode(ctx context.Context, arg GetProductByBarcodeParams) (Product, error)
 	GetRefreshTokenByHash(ctx context.Context, tokenHash string) (RefreshToken, error)
@@ -45,6 +48,9 @@ type Querier interface {
 	ListProductsWithStock(ctx context.Context, storeID uuid.UUID) ([]ListProductsWithStockRow, error)
 	ListStores(ctx context.Context) ([]Store, error)
 	LowStockCount(ctx context.Context, storeID uuid.UUID) (int64, error)
+	MarkPaymentPaid(ctx context.Context, arg MarkPaymentPaidParams) error
+	// Oldest pending intent for this exact amount that hasn't expired.
+	MatchPendingPaymentForUpdate(ctx context.Context, amount int64) (Payment, error)
 	// Atomically allocate the next gap-free sequence for a store. Running inside the
 	// sale transaction means a rollback also rolls back the increment → no gaps.
 	NextBillSeq(ctx context.Context, storeID uuid.UUID) (int32, error)

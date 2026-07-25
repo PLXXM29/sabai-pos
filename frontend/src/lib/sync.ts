@@ -34,8 +34,9 @@ export async function enqueueCheckout(
   paymentMethod: 'cash' | 'transfer',
   paid: number,
   discount = 0,
+  clientUUIDIn?: string,
 ): Promise<string> {
-  const clientUUID = crypto.randomUUID()
+  const clientUUID = clientUUIDIn ?? crypto.randomUUID()
   const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0)
   const total = subtotal - discount
   const effPaid = paymentMethod === 'transfer' ? total : paid

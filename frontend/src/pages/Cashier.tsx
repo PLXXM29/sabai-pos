@@ -8,6 +8,9 @@ import { pullCatalog, enqueueCheckout } from '../lib/sync'
 import { api } from '../lib/api'
 import { useCart, cartTotal, cartCount } from '../store/cart'
 import { baht } from '../lib/format'
+import { QRCodeSVG } from 'qrcode.react'
+import { promptPayPayload, isValidPromptPayId } from '../lib/promptpay'
+import { getPromptPayId, setPromptPayId, getAutoConfirm } from '../lib/settings'
 
 function tileOf(cat: string): [string, string] {
   return TILES[cat] ?? TILES['บุหรี่/อื่นๆ']
@@ -27,6 +30,12 @@ export default function Cashier() {
   const [received, setReceived] = useState('')
   const [toast, setToast] = useState('')
   const [cust, setCust] = useState(false)
+  const [ppId, setPpId] = useState(getPromptPayId())
+  const [ppInput, setPpInput] = useState('')
+  const [ppEditing, setPpEditing] = useState(false)
+  const [payId, setPayId] = useState<string | null>(null)
+  const [waiting, setWaiting] = useState<'idle' | 'waiting' | 'off'>('idle')
+  const [saleUUID, setSaleUUID] = useState('')
 
   // Refresh catalog from server on mount (works offline: keeps last cache).
   useEffect(() => {
@@ -54,20 +63,63 @@ export default function Cashier() {
   const canPay = items.length > 0
   const enoughCash = method !== 'cash' || (received !== '' && change >= 0)
 
-  const openPay = (m: 'cash' | 'transfer') => {
+  const openPay = async (m: 'cash' | 'transfer') => {
     if (!canPay) return
     setMethod(m)
     setReceived('')
     setPayOpen(true)
+    setPayId(null)
+    setWaiting('idle')
+    // Only open an auto-confirm intent if the shop turned it on (needs a
+    // payment forwarder). Otherwise transfer is confirmed manually.
+    if (m === 'transfer' && getAutoConfirm()) {
+      const uuid = crypto.randomUUID()
+      setSaleUUID(uuid)
+      try {
+        const p = await api.createPayment(total, uuid)
+        setPayId(p.id)
+        setWaiting('waiting')
+      } catch {
+        setWaiting('off') // not configured / offline → confirm manually
+      }
+    }
   }
 
-  const confirm = async () => {
-    if (!enoughCash) return
+  const closePay = () => {
+    if (payId && waiting === 'waiting') api.cancelPayment(payId)
+    setPayOpen(false)
+    setPayId(null)
+    setWaiting('idle')
+  }
+
+  // Poll the payment intent; auto-finalize the moment the bank money-in matches.
+  useEffect(() => {
+    if (!payOpen || method !== 'transfer' || !payId || waiting !== 'waiting') return
+    const iv = setInterval(async () => {
+      try {
+        const p = await api.getPayment(payId)
+        if (p.status === 'paid') {
+          clearInterval(iv)
+          await finalize(true)
+        }
+      } catch {
+        /* keep polling */
+      }
+    }, 2500)
+    return () => clearInterval(iv)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payOpen, method, payId, waiting])
+
+  const finalize = async (auto: boolean) => {
     const lines = items.map((i) => ({ id: i.id, name: i.name, price: i.price, qty: i.qty }))
-    const clientUUID = await enqueueCheckout(lines, method, method === 'cash' ? recvSatang : total)
+    const uuid = method === 'transfer' && saleUUID ? saleUUID : undefined
+    const clientUUID = await enqueueCheckout(lines, method, method === 'cash' ? recvSatang : total, 0, uuid)
+    if (payId && !auto) api.cancelPayment(payId) // manual confirm consumes the intent
     clear()
     setPayOpen(false)
-    showToast('บันทึกบิลแล้ว')
+    setPayId(null)
+    setWaiting('idle')
+    showToast(auto ? 'รับเงินอัตโนมัติแล้ว ✓' : 'บันทึกบิลแล้ว')
     // If it syncs quickly, open the printable receipt.
     for (let i = 0; i < 12; i++) {
       const b = await db.bills.get(clientUUID)
@@ -84,6 +136,11 @@ export default function Cashier() {
       }
       await new Promise((r) => setTimeout(r, 250))
     }
+  }
+
+  const confirm = () => {
+    if (!enoughCash) return
+    void finalize(false)
   }
 
   const cats = ['ทั้งหมด', ...CATS]
@@ -199,11 +256,11 @@ export default function Cashier() {
 
       {/* pay modal */}
       {payOpen && (
-        <div onClick={() => setPayOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,59,57,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+        <div onClick={closePay} style={{ position: 'fixed', inset: 0, background: 'rgba(15,59,57,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: 400, padding: '22px 24px', boxShadow: '0 20px 50px rgba(15,59,57,.3)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div style={{ fontWeight: 700, fontSize: 18 }}>{method === 'cash' ? 'รับเงินสด' : 'รับโอน / พร้อมเพย์'}</div>
-              <El as="button" onClick={() => setPayOpen(false)} s="border:none;background:#F0E7D6;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#2B2420;" hover="background:#E0D3BD;"><I.Close w={14} h={14} sw={2.5} /></El>
+              <El as="button" onClick={closePay} s="border:none;background:#F0E7D6;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#2B2420;" hover="background:#E0D3BD;"><I.Close w={14} h={14} sw={2.5} /></El>
             </div>
             <div style={{ background: '#FBF7EF', border: '1px solid #EFE5D2', borderRadius: 14, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
               <span style={{ fontSize: 13.5, color: '#8A7A66', fontWeight: 600 }}>ยอดที่ต้องชำระ</span>
@@ -225,8 +282,34 @@ export default function Cashier() {
               </>
             ) : (
               <div style={{ textAlign: 'center', padding: '6px 0 14px 0' }}>
-                <div style={{ width: 130, height: 130, margin: '0 auto 10px auto', border: '1.5px dashed #B5A88F', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8A7A66', fontSize: 12, background: 'repeating-linear-gradient(45deg,#FBF7EF,#FBF7EF 6px,#F5EDDE 6px,#F5EDDE 12px)' }}>QR พร้อมเพย์</div>
-                <div style={{ fontSize: 13, color: '#8A7A66' }}>ให้ลูกค้าสแกนจ่าย แล้วกดยืนยัน</div>
+                {ppId && !ppEditing ? (
+                  <>
+                    <div style={{ width: 184, height: 184, margin: '0 auto 8px auto', background: '#fff', border: '1.5px solid #E0D3BD', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <QRCodeSVG value={promptPayPayload(ppId, total / 100)} size={160} level="M" />
+                    </div>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0F3B39' }}>สแกนพร้อมเพย์ · {baht(total)}</div>
+                    <div style={{ fontSize: 11.5, color: '#B5A88F', marginTop: 3 }}>
+                      บัญชี: {ppId} · <span onClick={() => { setPpInput(ppId); setPpEditing(true) }} style={{ color: '#17706A', cursor: 'pointer', fontWeight: 600 }}>แก้ไข</span>
+                    </div>
+                    {waiting === 'waiting' ? (
+                      <div style={{ fontSize: 13, color: '#17706A', fontWeight: 600, marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                        <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#17706A', animation: 'fadeIn 1s ease-in-out infinite alternate' }} />
+                        กำลังรอรับเงินอัตโนมัติ…
+                      </div>
+                    ) : waiting === 'off' ? (
+                      <div style={{ fontSize: 12, color: '#B5A88F', marginTop: 6 }}>ตรวจเงินอัตโนมัติยังไม่พร้อม — เงินเข้าแล้วกดยืนยันเอง</div>
+                    ) : (
+                      <div style={{ fontSize: 12.5, color: '#8A7A66', marginTop: 4 }}>ให้ลูกค้าสแกนจ่าย แล้วกดยืนยัน</div>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ padding: '10px 4px' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#8A7A66', marginBottom: 8 }}>ตั้งค่าพร้อมเพย์ของร้าน (ครั้งเดียว)</div>
+                    <El as="input" value={ppInput} onChange={(e: any) => setPpInput(e.target.value)} placeholder="เบอร์มือถือ / เลขบัตร ปชช. / e-wallet" s="width:100%;border:1.5px solid #E0D3BD;border-radius:12px;padding:11px 14px;font-size:16px;font-family:'Space Grotesk',sans-serif;outline:none;text-align:center;margin-bottom:8px;" focus="border-color:#17706A;" autoFocus />
+                    <El as="button" onClick={() => { const v = ppInput.trim(); if (isValidPromptPayId(v)) { setPromptPayId(v); setPpId(v); setPpEditing(false) } else { showToast('เลขพร้อมเพย์ไม่ถูกต้อง (10 / 13 / 15 หลัก)') } }} s="width:100%;border:none;background:#17706A;color:#fff;border-radius:999px;padding:11px 0;font-size:14px;font-weight:700;cursor:pointer;" hover="background:#155f5a;">บันทึกพร้อมเพย์</El>
+                    <div style={{ fontSize: 11.5, color: '#B5A88F', marginTop: 8 }}>เก็บในเครื่องนี้ · ใช้สร้าง QR จากยอดแต่ละบิลอัตโนมัติ</div>
+                  </div>
+                )}
               </div>
             )}
             <El as="button" onClick={confirm} s={`width:100%;border:none;background:${enoughCash ? '#17706A' : '#B7C6C4'};color:#fff;border-radius:999px;padding:13px 0;font-size:15.5px;font-weight:700;cursor:${enoughCash ? 'pointer' : 'not-allowed'};box-shadow:0 3px 0 rgba(0,0,0,.25);`} active="transform:translateY(2px);box-shadow:none;">{method === 'cash' ? 'ยืนยันรับเงิน · พิมพ์ใบเสร็จ' : 'เงินเข้าแล้ว · ยืนยัน'}</El>

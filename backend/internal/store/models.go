@@ -61,6 +61,19 @@ type Inventory struct {
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
+type Payment struct {
+	ID             uuid.UUID          `json:"id"`
+	StoreID        uuid.UUID          `json:"store_id"`
+	BillClientUuid pgtype.UUID        `json:"bill_client_uuid"`
+	Amount         int64              `json:"amount"`
+	Status         string             `json:"status"`
+	Ref            *string            `json:"ref"`
+	RawNote        *string            `json:"raw_note"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	PaidAt         pgtype.Timestamptz `json:"paid_at"`
+	ExpiresAt      pgtype.Timestamptz `json:"expires_at"`
+}
+
 type Product struct {
 	ID        uuid.UUID          `json:"id"`
 	StoreID   uuid.UUID          `json:"store_id"`
