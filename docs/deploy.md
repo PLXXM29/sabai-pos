@@ -24,7 +24,7 @@ Sabai POS ทั้งระบบคือ **คอนเทนเนอร์�
 | `AUTO_MIGRATE` | | `true` | รัน migration ที่ค้างตอนบูต |
 | `SERVE_UI` | | `true` | เสิร์ฟหน้าเว็บที่ฝังไว้ (`false` = API อย่างเดียว) |
 | `DEMO_MODE` | | `false` | ⚠️ ดูหัวข้อถัดไป |
-| `DEMO_RESET_EVERY` | | `24h` | สร้างข้อมูลตัวอย่างใหม่ตามรอบ (`0` = ไม่ทำ) |
+| `DEMO_RESET_EVERY` | | `24h` | อายุสูงสุดของชุดข้อมูลตัวอย่างก่อนถูกสร้างใหม่ (`0` = ไม่ทำ) นับจากเวลาที่บันทึกไว้ในฐานข้อมูล ไม่ใช่ uptime ของโปรเซส — จำเป็นเมื่อแอป scale-to-zero |
 | `PAYMENT_NOTIFY_SECRET` | | ว่าง | ว่าง = ปิด `/webhooks/payment` |
 | `LINE_CHANNEL_SECRET` | | ว่าง | ว่าง = ปิด `/webhooks/line` |
 

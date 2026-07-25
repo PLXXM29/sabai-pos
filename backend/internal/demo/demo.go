@@ -18,6 +18,7 @@ package demo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -88,6 +89,39 @@ func (s *Seeder) Ensure(ctx context.Context, historyDays int) (Result, bool, err
 	return res, err == nil, err
 }
 
+// RefreshIfStale rebuilds the dataset when the last build is older than maxAge,
+// and reports whether it did.
+//
+// Age is measured from a timestamp in the database rather than from a ticker in
+// this process, because the process is not around long enough to be the clock:
+// the app scales to zero between visitors, so an in-memory 24-hour timer would
+// almost never fire, and the promise of a daily rebuild would quietly not hold.
+// Called on boot and on a short interval while running.
+func (s *Seeder) RefreshIfStale(ctx context.Context, maxAge time.Duration, historyDays int) (Result, bool, error) {
+	if maxAge <= 0 {
+		return Result{}, false, nil
+	}
+
+	var seededAt *time.Time
+	err := s.pool.QueryRow(ctx,
+		`SELECT (config->>'demo_seeded_at')::timestamptz FROM stores ORDER BY created_at LIMIT 1`,
+	).Scan(&seededAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Result{}, false, nil // nothing seeded yet — Ensure handles that
+		}
+		return Result{}, false, fmt.Errorf("read demo age: %w", err)
+	}
+	// A nil timestamp means the data was seeded by a build that predates this
+	// bookkeeping; treat it as stale so it adopts the convention on this pass.
+	if seededAt != nil && s.now().Sub(*seededAt) < maxAge {
+		return Result{}, false, nil
+	}
+
+	res, err := s.Reset(ctx, historyDays)
+	return res, err == nil, err
+}
+
 // Reset discards all business data and rebuilds the sample dataset from scratch.
 //
 // Everything happens in one transaction, so a visitor mid-sale during a reset
@@ -124,9 +158,13 @@ func (s *Seeder) Reset(ctx context.Context, historyDays int) (Result, error) {
 		return Result{}, fmt.Errorf("wipe: %w", err)
 	}
 
+	// The build timestamp lives in the database, not in process memory: the
+	// deployment scales to zero, so "how long since the last rebuild" cannot be
+	// answered by anything this process is holding. See RefreshIfStale.
 	storeID := uuid.New()
 	if _, err := tx.Exec(ctx,
-		`INSERT INTO stores (id, name, config) VALUES ($1, $2, '{}'::jsonb)`,
+		`INSERT INTO stores (id, name, config)
+		 VALUES ($1, $2, jsonb_build_object('demo_seeded_at', to_jsonb(now())))`,
 		pgUUID(storeID), shopName,
 	); err != nil {
 		return Result{}, fmt.Errorf("create store: %w", err)

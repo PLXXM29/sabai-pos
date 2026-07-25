@@ -79,6 +79,10 @@ func main() {
 				zap.Int("history_days", res.HistoryDays), zap.String("took", res.Took))
 		}
 		if cfg.DemoResetEvery > 0 {
+			// Checked here as well as on the timer: between visitors this
+			// process does not exist, so boot is often the only chance a
+			// scheduled rebuild gets to run at all.
+			refreshIfStale(rootCtx, seeder, cfg.DemoResetEvery, log)
 			go resetPeriodically(rootCtx, seeder, cfg.DemoResetEvery, log)
 		}
 	}
@@ -172,23 +176,38 @@ func openPool(ctx context.Context, poolCfg *pgxpool.Config, timeout time.Duratio
 	return pool, nil
 }
 
-// resetPeriodically returns the shared demo to its designed state on a timer, so
-// yesterday's visitors do not decide what today's visitors see.
+// resetPeriodically returns the shared demo to its designed state, so yesterday's
+// visitors do not decide what today's visitors see.
+//
+// The tick is only a prompt to re-read the clock — staleness is measured against
+// a timestamp in the database, because this process is stopped whenever nobody
+// is looking and cannot be trusted to have been running for a day.
 func resetPeriodically(ctx context.Context, seeder *demo.Seeder, every time.Duration, log *zap.Logger) {
-	ticker := time.NewTicker(every)
+	interval := every
+	if interval > time.Hour {
+		interval = time.Hour
+	}
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			res, err := seeder.Reset(ctx, demo.DefaultHistoryDays)
-			if err != nil {
-				log.Error("scheduled demo reset failed", zap.Error(err))
-				continue
-			}
-			log.Info("demo dataset reset on schedule",
-				zap.Int("bills", res.Bills), zap.String("took", res.Took))
+			refreshIfStale(ctx, seeder, every, log)
 		}
+	}
+}
+
+func refreshIfStale(ctx context.Context, seeder *demo.Seeder, maxAge time.Duration, log *zap.Logger) {
+	res, rebuilt, err := seeder.RefreshIfStale(ctx, maxAge, demo.DefaultHistoryDays)
+	if err != nil {
+		log.Error("scheduled demo reset failed", zap.Error(err))
+		return
+	}
+	if rebuilt {
+		log.Info("demo dataset rebuilt on schedule",
+			zap.Duration("max_age", maxAge), zap.Int("bills", res.Bills),
+			zap.String("took", res.Took))
 	}
 }
