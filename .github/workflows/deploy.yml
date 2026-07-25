@@ -1,0 +1,108 @@
+name: Deploy
+
+# Push to main → build the single app image, publish it, roll it out to Azure
+# Container Apps, and refuse to call it done until the new revision answers a
+# health check.
+#
+# Azure authentication is OIDC: GitHub mints a short-lived token that Azure
+# trusts for this repository and this branch only, so there is no long-lived
+# cloud credential stored here. The three "secrets" below are identifiers, not
+# passwords — nothing in them is usable on its own.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One rollout at a time, and never cancel one halfway: an interrupted
+# `containerapp update` leaves the app pointing at a half-created revision.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write # required for OIDC
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+  RESOURCE_GROUP: rg-sabai-pos
+  CONTAINER_APP: sabai-pos
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Identify this build
+        id: build
+        run: echo "version=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          # Tag by commit as well as latest: Container Apps creates a new
+          # revision when the image reference changes, and `latest` never does.
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          build-args: |
+            VERSION=${{ steps.build.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Roll out the new revision
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            set -euo pipefail
+            az containerapp update \
+              --name '${{ env.CONTAINER_APP }}' \
+              --resource-group '${{ env.RESOURCE_GROUP }}' \
+              --image '${{ env.IMAGE }}:${{ github.sha }}' \
+              --set-env-vars APP_VERSION='${{ steps.build.outputs.version }}' \
+              --output none
+            url="https://$(az containerapp show \
+              --name '${{ env.CONTAINER_APP }}' \
+              --resource-group '${{ env.RESOURCE_GROUP }}' \
+              --query properties.configuration.ingress.fqdn -o tsv)"
+            echo "url=$url" >> "$GITHUB_ENV"
+
+      - name: Verify the deployment is actually serving
+        run: |
+          set -euo pipefail
+          # The app scales to zero, so the first request is also a cold start:
+          # allow for the container and its serverless database to wake up.
+          for attempt in $(seq 1 30); do
+            if curl -fsS --max-time 20 "$url/readyz" > /tmp/ready; then
+              echo "ready after ${attempt} attempt(s): $(cat /tmp/ready)"
+              deployed=$(curl -fsS "$url/api/v1/meta" | jq -r .version)
+              echo "serving version: $deployed"
+              test "$deployed" = '${{ steps.build.outputs.version }}' \
+                || { echo "::error::still serving $deployed"; exit 1; }
+              echo "### Deployed :rocket:" >> "$GITHUB_STEP_SUMMARY"
+              echo "[$url]($url) · \`${{ steps.build.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::$url/readyz never became healthy"
+          exit 1
