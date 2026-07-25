@@ -1,5 +1,5 @@
 -- ============================================================================
--- 0001_init — MiniMart POS initial schema
+-- 0001_init — Sabai POS initial schema
 -- Money is stored as INTEGER satang (1 baht = 100 satang). NEVER float.
 -- Every business table carries store_id (multi-tenant ready, single-tenant now).
 -- Client-originated rows carry client_uuid as an idempotency key for sync.

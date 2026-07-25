@@ -10,6 +10,10 @@ backend/tmp/
 *.test
 *.out
 
+# Build output
+frontend/dist/
+*.tsbuildinfo
+
 # OS / editor
 .DS_Store
 .idea/

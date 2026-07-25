@@ -1,132 +1,157 @@
-# MiniMart POS 🛒
+# Sabai POS 🛒
 
-ระบบ Point-of-Sale ร้านมินิมาร์ท — **offline-first, multi-tenant-ready, production-grade**
-Backend: Go + PostgreSQL · Frontend: Vite + React (PWA)
+**ระบบขายหน้าร้านสำหรับร้านโชห่วยและมินิมาร์ท — ขายต่อได้แม้เน็ตหลุด**
 
-> เอกสารนี้คือ root ของ monorepo งานแบ่งเป็น 4 phase ตาม
-> [build brief](docs/) — ตอนนี้อยู่ปลาย **Phase 1**
+Go · PostgreSQL · React (PWA) · Docker · Azure Container Apps
 
-## โครงสร้าง
+[![CI](https://github.com/PLXXM29/sabai-pos/actions/workflows/ci.yml/badge.svg)](https://github.com/PLXXM29/sabai-pos/actions/workflows/ci.yml)
+[![Deploy](https://github.com/PLXXM29/sabai-pos/actions/workflows/deploy.yml/badge.svg)](https://github.com/PLXXM29/sabai-pos/actions/workflows/deploy.yml)
+
+### ▶︎ [ลองใช้เดโม](https://sabai-pos.graysand-7cd63bec.southeastasia.azurecontainerapps.io)
+
+เปิดแล้วกดปุ่มเดียวเข้าได้เลย ไม่ต้องสมัคร — เลือกได้ 3 บทบาท
+(`owner` / `manager` / `cashier`, รหัสคือ `[บทบาท]1234`)
+ข้อมูลเป็นชุดตัวอย่างที่สร้างขึ้น มียอดขายย้อนหลัง 30 วัน และรีเซ็ตอัตโนมัติทุกวัน
+**แก้ ลบ ขาย ยกเลิกบิลได้ตามสบาย** มีปุ่มรีเซ็ตอยู่ที่หน้าล็อกอิน
+
+![หน้าเข้าสู่ระบบ](docs/screenshots/login.jpg)
+
+---
+
+## โจทย์
+
+ร้านโชห่วยแถวบ้านใช้เครื่องคิดเลขกับสมุด ปัญหาไม่ใช่ว่าไม่มีซอฟต์แวร์ POS ให้ใช้
+แต่คือ POS ที่มีอยู่ **หยุดทำงานเมื่อเน็ตหลุด** ซึ่งสำหรับร้านที่ใช้เน็ตมือถือคือเรื่องปกติรายวัน
+พอขายต่อไม่ได้ก็ต้องจดใส่กระดาษ แล้วสิ้นวันยอดก็ไม่ตรงกับของบนชั้น
+
+ระบบนี้จึงออกแบบโดยถือว่า **"ออฟไลน์คือสถานะปกติ ไม่ใช่ข้อผิดพลาด"**
+
+| | |
+|---|---|
+| **ขายตอนเน็ตหลุด** | บิลถูกเขียนลง IndexedDB ก่อนเสมอ แล้วซิงก์ทีหลัง โดยใช้ `client_uuid` เป็น idempotency key ยิงซ้ำกี่ครั้งก็ได้บิลเดียว |
+| **สต็อกตรวจสอบได้** | ยอดคงเหลือไม่ได้เก็บเป็นตัวเลขลอย ๆ แต่คำนวณจาก ledger แบบ append-only ที่มี trigger กัน UPDATE/DELETE ระดับฐานข้อมูล |
+| **เงินไม่มีเศษหาย** | เก็บเป็น integer สตางค์ทั้งระบบ ไม่มี float แม้แต่จุดเดียว → [ADR 0001](docs/adr/0001-money-representation.md) |
+| **บิลแก้ไม่ได้** | ยกเลิกบิล = ออกบิล void ใบใหม่ที่อ้างถึงใบเดิมและคืนสต็อกผ่าน ledger ของเดิมยังอยู่ครบ |
+| **สิทธิ์จริง ไม่ใช่ซ่อนปุ่ม** | RBAC ตรวจที่เซิร์ฟเวอร์ — ลองล็อกอินเป็น `cashier` แล้วยิง `/api/v1/reports/summary` จะได้ 403 |
+| **รับเงินโอน** | สร้าง QR พร้อมเพย์ตามมาตรฐาน EMVCo ในเครื่อง (ออฟไลน์ได้) และตรวจเงินเข้าอัตโนมัติผ่าน LINE webhook ได้ → [docs/payments.md](docs/payments.md) |
+
+![หน้าแคชเชียร์](docs/screenshots/cashier.jpg)
+![แดชบอร์ด](docs/screenshots/dashboard.jpg)
+
+## สถาปัตยกรรม
 
 ```
-minimart-pos/
-├── backend/           Go 1.25 · Gin · PostgreSQL 16 · sqlc · JWT · Zap
-│   ├── cmd/api/            entrypoint (config → logger → db → http + graceful shutdown)
+                    ┌─────────────────────────────────────────┐
+   เบราว์เซอร์ /     │  Azure Container Apps (scale-to-zero)   │
+   PWA บนมือถือ ───▶ │  ┌───────────────────────────────────┐  │
+                    │  │  sabai-pos  (Go, distroless 56MB) │  │
+                    │  │                                   │  │
+                    │  │  /            → SPA ที่ฝังในไบนารี │  │
+                    │  │  /api/v1/…    → REST + JWT/RBAC    │  │
+                    │  │  boot         → migrate + seed     │  │
+                    │  └───────────────┬───────────────────┘  │
+                    └──────────────────┼──────────────────────┘
+                                       ▼
+                              Neon Postgres (serverless)
+```
+
+**ทั้งระบบคือคอนเทนเนอร์เดียว** — Go binary เสิร์ฟทั้งหน้าเว็บและ API
+ไม่ใช่เพราะขี้เกียจแยก แต่เพราะ refresh token เป็น httpOnly cookie
+ถ้าแยก origin จะต้องใช้ `SameSite=None` (ซึ่ง Safari บล็อก) บวกกับ CORS allow-list ที่ต้องคอยดูแล
+อยู่ origin เดียวกันปัญหาทั้งสองหายไป และเหลือของให้ deploy แค่ชิ้นเดียว
+เหตุผลเต็มอยู่ใน [`backend/internal/web`](backend/internal/web/web.go)
+
+```
+sabai-pos/
+├── backend/            Go 1.25 · Gin · PostgreSQL 16 · sqlc · JWT · Zap
+│   ├── cmd/api/            entrypoint: config → db → migrate → seed → http
+│   ├── cmd/seed/           ติดตั้งครั้งแรกสำหรับร้านจริง
 │   ├── internal/
-│   │   ├── config/         โหลด+ตรวจ env, fail fast
-│   │   ├── logger/         Zap
-│   │   ├── middleware/     request-id · logging · recovery · CORS
-│   │   ├── handler/        gin handlers (บาง) — /healthz /readyz
-│   │   └── store/          sqlc generated (type-safe queries)
-│   ├── migrations/         golang-migrate (0001_init = schema เต็ม)
-│   ├── queries/            .sql สำหรับ sqlc
-│   └── Dockerfile          multi-stage, distroless non-root
-├── frontend/          Vite + React + TS (POS client — rebuild เต็มใน Phase 3)
-├── docs/
-│   ├── adr/                Architecture Decision Records
-│   └── design/            ดีไซน์ต้นฉบับ (MiniMart-POS.dc.html)
-└── docker-compose.yml  db + migrate + api (คำสั่งเดียวขึ้นครบ)
+│   │   ├── demo/           สร้างชุดข้อมูลตัวอย่าง 1 เดือนแบบ deterministic
+│   │   ├── web/            เสิร์ฟ SPA ที่ฝังไว้ (cache + gzip + SPA fallback)
+│   │   ├── dbmigrate/      รัน migration ตอนบูต (advisory lock กันชนกัน)
+│   │   ├── service/        business logic (ขาย/สต็อก/รายงาน/ชำระเงิน)
+│   │   ├── store/          sqlc generated — query ที่ type-safe
+│   │   └── …               auth · middleware · handler · receipt · domain
+│   └── migrations/         golang-migrate (ฝังในไบนารีด้วย embed.FS)
+├── frontend/           Vite + React + TS · Dexie (IndexedDB) · PWA
+├── docs/               ADR · deploy · payments · handover
+└── Dockerfile          3 stage → distroless non-root image เดียว
 ```
 
-## เริ่มใช้งาน (dev)
+## รันในเครื่อง
 
-ต้องมี **Docker Desktop** ทำงานอยู่
+ต้องมี **Docker Desktop** ทำงานอยู่ แค่นี้พอ
 
 ```bash
-cp .env.example .env        # แล้วแก้ password/secrets ตามต้องการ
+cp .env.example .env
 docker compose up -d --build
 ```
 
-จะได้:
-- Postgres (host port **5433**), รัน migration อัตโนมัติ
-- API ที่ **http://localhost:8082**
+เปิด **http://localhost:8082** ได้เลย — schema ถูก migrate และข้อมูลตัวอย่าง
+(สินค้า 36 รายการ + บิลย้อนหลัง 30 วัน ~1,500 ใบ) ถูกสร้างให้อัตโนมัติในการบูตครั้งแรก
+
+<details>
+<summary>แก้โค้ดฝั่งหน้าเว็บ (มี HMR)</summary>
 
 ```bash
-curl http://localhost:8082/healthz   # {"status":"ok"}
-curl http://localhost:8082/readyz    # {"db":"up","status":"ok"}
+cd frontend && npm install && npm run dev     # http://localhost:5173
 ```
 
-### ใส่ข้อมูลตัวอย่าง (seed)
+Vite proxy `/api` ไปที่ `:8082` ให้แล้ว จึงยังเป็น same-origin เหมือนตอน production
+</details>
+
+<details>
+<summary>รันเฉพาะ backend (ไม่ผ่าน compose)</summary>
 
 ```bash
 cd backend
-DATABASE_URL="postgres://minimart:change_me_dev_password@localhost:5433/minimart?sslmode=disable" \
-  go run ./cmd/seed
+cp .env.example .env          # ชี้ DATABASE_URL ไปที่ Postgres ที่รันอยู่
+make ui                       # (ครั้งแรก) build หน้าเว็บเข้าไปฝังในไบนารี
+make run
+```
+</details>
+
+### เทสต์
+
+```bash
+cd backend
+make test        # unit — เร็ว ไม่ต้องใช้ Docker
+make test-all    # + integration ยิงใส่ Postgres จริงผ่าน testcontainers
 ```
 
-สร้าง 1 ร้าน + 30 สินค้า + ผู้ใช้ dev (idempotent):
-
-| ผู้ใช้ | รหัสผ่าน | บทบาท |
-|---|---|---|
-| `owner` | `owner1234` | superadmin |
-| `manager` | `manager1234` | manager |
-| `cashier` | `cashier1234` | cashier |
-
-### API v1 (มีแล้ว)
+## API
 
 | Method | Path | สิทธิ์ |
 |---|---|---|
-| POST | `/api/v1/auth/login` `/refresh` `/logout` | public (refresh ใช้ httpOnly cookie) |
-| GET | `/api/v1/auth/me` | auth |
-| POST | `/api/v1/auth/change-password` | auth (เปลี่ยนรหัสตัวเอง + เพิกถอน session อื่น) |
+| GET | `/api/v1/meta` | public — บอกว่า deployment นี้เป็นเดโมหรือไม่ |
+| POST | `/api/v1/auth/login` · `/refresh` · `/logout` | public (refresh ใช้ httpOnly cookie + rotation) |
+| GET/POST | `/api/v1/auth/me` · `/change-password` | auth |
 | POST | `/api/v1/auth/register` | manager+ |
-| GET | `/api/v1/products` · `/products/:id` · `/products/:id/onhand` | auth (รวม cashier) |
-| POST/PUT/DELETE | `/api/v1/products` … | **manager+** (cashier โดน 403) |
-| POST | `/api/v1/products/:id/receive` | manager+ (idempotent ด้วย `client_uuid`) |
-| POST | `/api/v1/bills` (ปิดการขาย) | auth (cashier ขายได้) · atomic · idempotent |
-| GET | `/api/v1/bills/:id` | auth |
-| GET | `/api/v1/bills/:id/receipt?format=html\|escpos&width=58\|80` | auth (พิมพ์ใบเสร็จ) |
-| POST | `/api/v1/bills/:id/void` | **manager+** (สร้าง void bill คืนสต็อก) |
+| GET | `/api/v1/products` · `/:id` · `/:id/onhand` | auth (รวม cashier) |
+| POST/PUT/DELETE | `/api/v1/products` … · `/:id/receive` | **manager+** (cashier ได้ 403) |
+| POST | `/api/v1/bills` | auth · atomic · idempotent ด้วย `client_uuid` |
+| GET | `/api/v1/bills/:id/receipt?format=html\|escpos&width=58\|80` | auth |
+| POST | `/api/v1/bills/:id/void` | **manager+** |
+| POST/GET | `/api/v1/payments` · `/:id` · `/:id/cancel` | auth |
+| POST | `/api/v1/webhooks/line` · `/webhooks/payment` | ตรวจลายเซ็น LINE / `X-Notify-Secret` |
+| POST | `/api/v1/demo/reset` | เฉพาะตอน `DEMO_MODE=true` เท่านั้น |
+| GET | `/healthz` · `/readyz` | public |
 
-### รันเทสต์
+## Deploy
 
-```bash
-cd backend
-go test ./...                              # unit (เร็ว ไม่ต้อง Docker)
-go test -tags=integration ./internal/store # integration (testcontainers → Postgres จริง)
-```
+| ปลายทาง | วิธี |
+|---|---|
+| **Azure Container Apps** (เดโมตัวนี้) | push เข้า `main` → GitHub Actions build image → push ghcr.io → `az containerapp update` → เช็ก `/readyz` ก่อนถือว่าสำเร็จ · auth เป็น OIDC ไม่มี secret ค้างในรีโป |
+| **เซิร์ฟเวอร์ตัวเอง** | `docker compose -f docker-compose.prod.yml up -d --build` + Caddy ข้างหน้าเพื่อทำ HTTPS |
 
-## Production
+ขั้นตอนเต็ม ตัวแปรทั้งหมด และการสำรองข้อมูล: [docs/deploy.md](docs/deploy.md)
+· ส่งมอบ/ดูแลระบบ: [docs/handover.md](docs/handover.md)
 
-deploy จริงด้วย `docker-compose.prod.yml` (nginx เสิร์ฟ SPA + proxy `/api`, backend/db ภายใน):
+## หลักการที่ยึด (ห้ามพลาด)
 
-```bash
-cp .env.example .env    # ตั้ง secret แข็งแรง + โดเมน
-docker compose -f docker-compose.prod.yml up -d --build
-docker compose -f docker-compose.prod.yml run --rm --entrypoint /seed backend   # ครั้งแรก
-```
-
-- **HTTPS จำเป็น** (refresh cookie เป็น Secure) — ใช้ Caddy ด้านหน้า → [docs/deploy.md](docs/deploy.md)
-- **CI**: `.github/workflows/ci.yml` (lint+test+build) · images บน tag: `release.yml`
-- **สำรองข้อมูล**: `scripts/backup.sh` (+ cron) · กู้คืน: `scripts/restore.sh`
-- ส่งมอบ/ดูแล: [docs/handover.md](docs/handover.md)
-
-> พอร์ต 5433/8082 ถูกเลือกเพื่อเลี่ยงการชนกับ Postgres/บริการอื่นบนเครื่องนี้
-> (แก้ได้ใน `docker-compose.yml`) การเชื่อมภายใน container ใช้ `db:5432` เสมอ
-
-### รัน backend ตรงๆ (ไม่ผ่าน compose)
-
-```bash
-cd backend
-cp .env.example .env        # ชี้ DATABASE_URL ไปที่ Postgres ที่รันอยู่
-go run ./cmd/api            # หรือ: make run
-```
-
-## หลักการสำคัญ (ห้ามพลาด)
-
-- **เงิน = integer satang** (1 บาท = 100 สตางค์) ไม่มี float ทั้งระบบ → [ADR 0001](docs/adr/0001-money-representation.md)
-- **สต็อก = append-only ledger** (`stock_movements`) แก้/ลบไม่ได้ (มี trigger กัน)
-- **บิล immutable** + snapshot ราคา, `client_uuid` เป็น idempotency key สำหรับ offline sync
-- ทุกตารางมี `store_id` (multi-tenant-ready) → [ADR 0002](docs/adr/0002-architecture-and-stack.md)
-
-## สถานะงาน
-
-| Phase | งาน | สถานะ |
-|---|---|---|
-| 1 | docker-compose + โครงโปรเจกต์ + migration แรก | ✅ เสร็จ |
-| 1 | sqlc + auth (argon2id/JWT/refresh/RBAC) + CRUD สินค้า/รับสต็อก + seed + test | ✅ เสร็จ |
-| 2 | ปิดการขาย (atomic/idempotent) + เลขบิล gap-free + void/refund + ใบเสร็จ HTML/ESC-POS | ✅ เสร็จ |
-| 3a | report endpoints + frontend offline-first (Router/Dexie/sync/PWA) + Login + Cashier | ✅ เสร็จ |
-| 3b | หน้าร้าน + สต็อก(รับเข้า/CRUD, RBAC) + แดชบอร์ด(reports) + จอลูกค้า + ยิงบาร์โค้ด | ✅ เสร็จ |
-| 4 | prod image (nginx) + CI/CD + backup + deploy/handover docs | ✅ **เสร็จ — พร้อมขาย** |
-| 4 | Deploy/CI-CD/backup/handover docs | ⬜ |
+- **เงิน = integer สตางค์** (1 บาท = 100 สตางค์) ไม่มี float ทั้งระบบ → [ADR 0001](docs/adr/0001-money-representation.md)
+- **สต็อก = ledger แบบ append-only** (`stock_movements`) แก้/ลบไม่ได้ มี trigger กันที่ฐานข้อมูล
+- **บิล immutable** + snapshot ชื่อและราคาตอนขาย · `client_uuid` คือ idempotency key ของการซิงก์
+- **เลขบิลไม่มีช่องว่าง** — จองเลขในทรานแซกชันเดียวกับการขาย rollback แล้วเลขคืนอัตโนมัติ
+- **ทุกตารางมี `store_id`** (พร้อมขยายเป็น multi-tenant) → [ADR 0002](docs/adr/0002-architecture-and-stack.md)

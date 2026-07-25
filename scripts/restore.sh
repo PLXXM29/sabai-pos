@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Restore a gzipped pg_dump into the running compose DB. DESTRUCTIVE.
-# Usage:  ./scripts/restore.sh backups/minimart-YYYYmmdd-HHMMSS.sql.gz
+# Usage:  ./scripts/restore.sh backups/sabai-pos-YYYYmmdd-HHMMSS.sql.gz
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

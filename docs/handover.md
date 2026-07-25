@@ -1,18 +1,21 @@
-# Handover — MiniMart POS
+# Handover — Sabai POS
 
 เอกสารส่งมอบ: ภาพรวมระบบ วิธีดูแล และงานที่พบบ่อย
 
 ## ระบบคืออะไร
-POS ร้านมินิมาร์ท **offline-first**: เครื่องแคชเชียร์ขายได้แม้เน็ตหลุด แล้ว sync ทีหลัง
+POS สำหรับร้านโชห่วยและมินิมาร์ท **offline-first**: เครื่องแคชเชียร์ขายได้แม้เน็ตหลุด แล้ว sync ทีหลัง
 เงินทุกจุดเก็บเป็น **integer satang** (ไม่มี float) · บิล/ledger สต็อก **แก้ไม่ได้** (immutable)
 ออกแบบเผื่อหลายสาขา (`store_id` ทุกตาราง) แต่รันร้านเดียวก่อน
 
 ## สถาปัตยกรรม
 ```
-[Frontend PWA (React)]  ──/api──►  [nginx] ──►  [Backend Go/Gin]  ──►  [PostgreSQL]
-  Dexie/IndexedDB (local-first)                   handler→service→store(sqlc)
-  sync engine (pending queue, client_uuid)        JWT + refresh cookie + RBAC
+[Frontend PWA (React)] ──/api──► [Go binary ตัวเดียว] ──► [PostgreSQL]
+  Dexie/IndexedDB (local-first)    เสิร์ฟทั้ง SPA และ API
+  sync engine (pending, client_uuid)  handler→service→store(sqlc)
+                                   JWT + refresh cookie + RBAC
 ```
+ทั้งระบบเป็นคอนเทนเนอร์เดียว ไม่มี nginx และไม่มี migrate job แยก —
+ไบนารีรัน migration ให้ตัวเองตอนบูต
 รายละเอียดการตัดสินใจ: `docs/adr/` · โครง/คำสั่ง: `README.md`, `backend/README.md`, `frontend/README.md`
 
 ## บทบาทผู้ใช้ (RBAC — บังคับที่ backend)
@@ -47,10 +50,12 @@ curl -X POST https://pos.example.com/api/v1/auth/change-password \
 
 **พิมพ์ใบเสร็จซ้ำ** — `GET /api/v1/bills/{id}/receipt?format=html` (หรือ `escpos` สำหรับเครื่องพิมพ์ความร้อน)
 
+**ตรวจเงินโอนเข้าอัตโนมัติ (PromptPay)** — ตั้งค่า LINE OA / Apps Script / มือถือ ให้ยิง webhook → ระบบยืนยัน "โอนจ่าย" + พิมพ์ใบเสร็จเอง ดู [docs/payments.md](payments.md)
+
 ## ดูแลรักษา
 - **สำรองข้อมูล**: cron `scripts/backup.sh` ทุกวัน + ทดสอบ restore เป็นระยะ (ดู deploy.md)
 - **อัปเดต**: `git pull && docker compose -f docker-compose.prod.yml up -d --build`
-- **ล็อก**: `docker compose -f docker-compose.prod.yml logs -f backend` (structured JSON, มี request_id)
+- **ล็อก**: `docker compose -f docker-compose.prod.yml logs -f app` (structured JSON, มี request_id)
 - **สุขภาพ**: `/healthz`, `/readyz` — ต่อ uptime monitor
 
 ## แก้ปัญหาเบื้องต้น
@@ -59,7 +64,7 @@ curl -X POST https://pos.example.com/api/v1/auth/change-password \
 | login แล้วเด้งออก / refresh ไม่ทำงาน | ต้องเสิร์ฟผ่าน **HTTPS** (refresh cookie เป็น Secure) — เช็ค Caddy/โดเมน |
 | แคชเชียร์เห็น "ออฟไลน์" | เน็ตหลุด — ยังขายได้ บิลจะเข้าคิว sync เมื่อกลับมาออนไลน์ |
 | บิลค้าง "รอ sync" | ดู log backend; ถ้า server ปฏิเสธ (เช่นสต็อกไม่พอจากอีกเครื่อง) บิลจะถูก mark error |
-| backend ไม่ start | config ผิด (fail fast) — อ่าน log จะบอกว่า env ตัวไหนขาด/ผิด |
+| แอปไม่ start | config ผิด (fail fast) — อ่าน log จะบอกว่า env ตัวไหนขาด/ผิด |
 | เลขบิลต้องไม่ซ้ำ/ไม่ข้าม | ออกจาก `bill_counters` ในทรานแซกชันเดียว — ข้ามเฉพาะกรณี rollback (ตั้งใจ) |
 
 ## จุดที่ยังต่อยอดได้ (ไม่บล็อกการใช้งาน)
