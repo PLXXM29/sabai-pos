@@ -250,7 +250,7 @@ function DemoFooter({ resetEvery, version }: { resetEvery?: string; version?: st
   return (
     <div className="signin__foot">
       ข้อมูลตัวอย่าง มียอดขายย้อนหลัง 30 วัน แก้อะไรก็ได้
-      {resetEvery ? ' เพราะสร้างใหม่ทุกวันอยู่แล้ว' : ''}
+      {resetEvery ? ' ระบบสร้างชุดใหม่ให้เองเป็นระยะ' : ''}
       <br />
       {state === 'idle' && (
         <button className="signin__link" onClick={() => setState('confirm')} type="button">

@@ -89,32 +89,47 @@ func (s *Seeder) Ensure(ctx context.Context, historyDays int) (Result, bool, err
 	return res, err == nil, err
 }
 
-// RefreshIfStale rebuilds the dataset when the last build is older than maxAge,
-// and reports whether it did.
+// RefreshIfStale rebuilds the dataset when it no longer describes today, and
+// reports whether it did.
 //
-// Age is measured from a timestamp in the database rather than from a ticker in
-// this process, because the process is not around long enough to be the clock:
-// the app scales to zero between visitors, so an in-memory 24-hour timer would
-// almost never fire, and the promise of a daily rebuild would quietly not hold.
-// Called on boot and on a short interval while running.
+// "Stale" is primarily a calendar question, not an age one. The generated
+// history runs up to the moment it was generated, so the day it was built on is
+// the only day with a full trading record. Once the Bangkok date turns over,
+// the dashboard's headline figure — today's takings — reads zero, no matter how
+// recently the data was built. A set generated at 23:30 would show an empty
+// shop for the whole of the next day. maxAge stays as an upper bound for the
+// case where the day somehow does not turn.
+//
+// Both are evaluated against the database clock rather than a ticker in this
+// process, because the process is not around long enough to be one: the app
+// scales to zero between visitors, so an in-memory timer would rarely fire at
+// all. Called on boot and on a short interval while running.
 func (s *Seeder) RefreshIfStale(ctx context.Context, maxAge time.Duration, historyDays int) (Result, bool, error) {
 	if maxAge <= 0 {
 		return Result{}, false, nil
 	}
 
 	var seededAt *time.Time
-	err := s.pool.QueryRow(ctx,
-		`SELECT (config->>'demo_seeded_at')::timestamptz FROM stores ORDER BY created_at LIMIT 1`,
-	).Scan(&seededAt)
+	var dayTurned *bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT (config->>'demo_seeded_at')::timestamptz,
+		       ((config->>'demo_seeded_at')::timestamptz AT TIME ZONE 'Asia/Bangkok')::date
+		         <> (now() AT TIME ZONE 'Asia/Bangkok')::date
+		FROM stores ORDER BY created_at LIMIT 1`,
+	).Scan(&seededAt, &dayTurned)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return Result{}, false, nil // nothing seeded yet — Ensure handles that
 		}
 		return Result{}, false, fmt.Errorf("read demo age: %w", err)
 	}
+
 	// A nil timestamp means the data was seeded by a build that predates this
 	// bookkeeping; treat it as stale so it adopts the convention on this pass.
-	if seededAt != nil && s.now().Sub(*seededAt) < maxAge {
+	fresh := seededAt != nil &&
+		dayTurned != nil && !*dayTurned &&
+		s.now().Sub(*seededAt) < maxAge
+	if fresh {
 		return Result{}, false, nil
 	}
 
