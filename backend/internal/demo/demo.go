@@ -292,14 +292,17 @@ func (s *Seeder) Reset(ctx context.Context, historyDays int) (Result, error) {
 
 		// A void does not edit the original bill: it is a new document that
 		// mirrors it, references it, and returns the stock through the ledger.
+		// Attributed to a manager-or-above, because that is who the API lets
+		// issue one — the generated history has to obey the same rules.
 		v := o.voidO
 		orig := &sales[v.of]
+		voidedBy := pgUUID(userIDs[staffIndex("superadmin")])
 		var subtotal int64
 		for _, ln := range orig.lines {
 			subtotal += catalog[ln.product].price * int64(ln.qty)
 		}
 		billRows = append(billRows, []any{
-			pgUUID(v.id), pgUUID(storeID), no, pgUUID(uuid.New()), pgUUID(userIDs[1]),
+			pgUUID(v.id), pgUUID(storeID), no, pgUUID(uuid.New()), voidedBy,
 			subtotal, orig.discount, subtotal - orig.discount, int64(0), int64(0),
 			orig.method, "void", pgUUID(orig.id), v.at, v.at,
 		})
@@ -312,7 +315,7 @@ func (s *Seeder) Reset(ctx context.Context, historyDays int) (Result, error) {
 			movements = append(movements, []any{
 				pgUUID(uuid.New()), pgUUID(storeID), pgUUID(productIDs[ln.product]),
 				"void", ln.qty, &refVoid, pgUUID(v.id), &v.reason,
-				pgUUID(userIDs[1]), pgtype.UUID{}, v.at,
+				voidedBy, pgtype.UUID{}, v.at,
 			})
 		}
 	}
@@ -560,16 +563,30 @@ func contains(s []int, v int) bool {
 	return false
 }
 
-// cashierAt puts the owner on the early shift and the cashier on the busy
+// staffIndex locates an account by role. Resolved rather than hard-coded so
+// that changing the published account list cannot silently produce an
+// out-of-range index — or, worse, attribute a void to a cashier who is not
+// allowed to issue one.
+func staffIndex(role string) int {
+	for i, a := range Accounts {
+		if a.Role == role {
+			return i
+		}
+	}
+	return 0
+}
+
+// cashierAt puts the owner on the quiet early shift and the cashier on the busy
 // evening, so the per-user audit trail is not uniform noise.
 func cashierAt(rng *rand.Rand, hour int) int {
+	owner, till := staffIndex("superadmin"), staffIndex("cashier")
 	switch {
 	case hour < 11:
-		return []int{0, 0, 1}[rng.Intn(3)]
+		return []int{owner, owner, till}[rng.Intn(3)]
 	case hour < 16:
-		return []int{1, 1, 2}[rng.Intn(3)]
+		return []int{till, till, owner}[rng.Intn(3)]
 	default:
-		return []int{2, 2, 2, 1}[rng.Intn(4)]
+		return []int{till, till, till, owner}[rng.Intn(4)]
 	}
 }
 

@@ -5,14 +5,16 @@ import { api, type User } from './api'
 type AuthCtx = {
   user: User | null
   ready: boolean
-  login: (username: string, password: string) => Promise<void>
+  login: (username: string, password: string) => Promise<User>
   logout: () => Promise<void>
 }
 
 const Ctx = createContext<AuthCtx>({
   user: null,
   ready: false,
-  login: async () => {},
+  login: async () => {
+    throw new Error('AuthProvider is missing')
+  },
   logout: async () => {},
 })
 
@@ -34,7 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (username: string, password: string) => {
-    setUser(await api.login(username, password))
+    const u = await api.login(username, password)
+    setUser(u)
+    return u
   }
   const logout = async () => {
     await api.logout()
@@ -48,6 +52,24 @@ export const useAuth = () => useContext(Ctx)
 
 export function canManage(role?: string) {
   return role === 'manager' || role === 'superadmin'
+}
+
+/** Routes the server will refuse to a cashier. */
+const MANAGER_ROUTES = ['/dashboard']
+
+/**
+ * Where to send someone after they sign in.
+ *
+ * Returning to the page that bounced you to the login screen is the right
+ * default, but only if you are allowed to be there. Signing out of the
+ * dashboard and back in as a cashier used to land on the dashboard — a page
+ * that immediately tells you that you cannot see it. The first screen after
+ * signing in should be one that works.
+ */
+export function landingFor(role: string | undefined, wanted?: string) {
+  if (!wanted || wanted === '/login') return '/'
+  if (!canManage(role) && MANAGER_ROUTES.some((p) => wanted.startsWith(p))) return '/'
+  return wanted
 }
 
 export function RequireAuth({ children }: { children: ReactNode }) {

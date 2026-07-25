@@ -74,29 +74,28 @@ type Account struct {
 	Description string `json:"description"`
 }
 
-// Accounts covers the three permission levels the RBAC layer distinguishes, so a
-// visitor can see for themselves that a cashier really is refused the manager's
-// screens rather than just having them hidden.
+// Accounts are the demo logins, one per permission level the API actually
+// distinguishes — which is two.
+//
+// The schema carries three roles, but every guarded endpoint is currently
+// RequireRole(superadmin, manager): a manager can do everything an owner can.
+// Offering a third button would advertise a distinction the server does not
+// enforce, and the whole point of publishing these accounts is to let a visitor
+// check the boundary for themselves. If superadmin ever gains a power of its
+// own, it earns its button back.
 var Accounts = []Account{
 	{
 		Username:    "owner",
 		Password:    "owner1234",
 		Role:        "superadmin",
 		Label:       "เจ้าของร้าน",
-		Description: "เห็นทุกอย่าง — ยอดขาย กำไร ต้นทุน จัดการสินค้าและพนักงาน",
-	},
-	{
-		Username:    "manager",
-		Password:    "manager1234",
-		Role:        "manager",
-		Label:       "ผู้จัดการ",
-		Description: "ขายได้ รับสต็อก แก้ราคา ยกเลิกบิล ดูรายงาน",
+		Description: "เห็นทุกอย่าง — ยอดขาย กำไร ต้นทุน แก้ราคา รับสต็อก ยกเลิกบิล",
 	},
 	{
 		Username:    "cashier",
 		Password:    "cashier1234",
 		Role:        "cashier",
 		Label:       "พนักงานแคชเชียร์",
-		Description: "ขายและพิมพ์ใบเสร็จเท่านั้น — รายงานกำไรและการแก้ราคาถูกปิด",
+		Description: "ขายและพิมพ์ใบเสร็จเท่านั้น — รายงานกำไรและการแก้ราคาถูกปิดที่เซิร์ฟเวอร์",
 	},
 }

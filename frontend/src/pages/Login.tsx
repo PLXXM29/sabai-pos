@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Check, ChevronRight, Logo } from '../icons'
-import { useAuth } from '../lib/auth'
+import { landingFor, useAuth } from '../lib/auth'
 import { useMeta } from '../lib/meta'
 import { api, type DemoAccount } from '../lib/api'
 
@@ -36,8 +36,8 @@ export default function Login() {
     setErr('')
     setBusy(tag)
     try {
-      await login(user.trim(), pass)
-      nav(loc.state?.from?.pathname ?? '/', { replace: true })
+      const signedIn = await login(user.trim(), pass)
+      nav(landingFor(signedIn.role, loc.state?.from?.pathname), { replace: true })
     } catch {
       setErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง')
       setBusy('')
