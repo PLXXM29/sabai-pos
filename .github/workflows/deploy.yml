@@ -91,22 +91,37 @@ jobs:
             echo "url=$url" >> "$GITHUB_ENV"
 
       - name: Verify the deployment is actually serving
+        env:
+          EXPECTED: ${{ steps.build.outputs.version }}
         run: |
-          set -euo pipefail
-          # The app scales to zero, so the first request is also a cold start:
-          # allow for the container and its serverless database to wake up.
-          for attempt in $(seq 1 30); do
-            if curl -fsS --max-time 20 "$url/readyz" > /tmp/ready; then
-              echo "ready after ${attempt} attempt(s): $(cat /tmp/ready)"
-              deployed=$(curl -fsS "$url/api/v1/meta" | jq -r .version)
-              echo "serving version: $deployed"
-              test "$deployed" = '${{ steps.build.outputs.version }}' \
-                || { echo "::error::still serving $deployed"; exit 1; }
-              echo "### Deployed :rocket:" >> "$GITHUB_STEP_SUMMARY"
-              echo "[$url]($url) · \`${{ steps.build.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"
-              exit 0
+          set -uo pipefail
+          # Success is "the new build is answering", not "something is
+          # answering". Container Apps provisions the revision and shifts
+          # traffic asynchronously, so the old one keeps serving for a while
+          # after `az containerapp update` returns — and the app scales to zero,
+          # so the first request also pays a cold start for the container and
+          # its serverless database. Both mean this has to keep asking.
+          deadline=$((SECONDS + 300))
+          serving=""
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            serving=$(curl -fsS --max-time 20 "$url/api/v1/meta" | jq -r .version 2>/dev/null || true)
+            if [ "$serving" = "$EXPECTED" ]; then
+              ready=$(curl -fsS --max-time 20 "$url/readyz" || true)
+              case "$ready" in
+                *'"status":"ok"'*)
+                  echo "serving $EXPECTED after ${SECONDS}s · $ready"
+                  {
+                    echo "### Deployed :rocket:"
+                    echo "[$url]($url) · \`$EXPECTED\` · healthy in ${SECONDS}s"
+                  } >> "$GITHUB_STEP_SUMMARY"
+                  exit 0
+                  ;;
+              esac
+              echo "  build is live but /readyz is not ok yet: ${ready:-no response}"
+            else
+              echo "  still serving '${serving:-nothing}', waiting for '$EXPECTED'"
             fi
-            sleep 5
+            sleep 10
           done
-          echo "::error::$url/readyz never became healthy"
+          echo "::error::after 300s the site is serving '${serving:-nothing}', not '$EXPECTED'"
           exit 1
