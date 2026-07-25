@@ -30,13 +30,11 @@ export default function Dashboard() {
           </div>
           {denied ? (
             <div style={{ fontSize: 13.5, lineHeight: 1.75 }}>
-              ยอดขาย กำไร และต้นทุน เปิดให้เฉพาะผู้จัดการขึ้นไป
-              <br />
               บัญชี <b style={{ color: '#2B2420' }}>{user?.username}</b> มีสิทธิ์{' '}
               <b style={{ color: '#2B2420' }}>{user?.role}</b> เซิร์ฟเวอร์จึงตอบกลับ{' '}
-              <b style={{ color: '#C23A2B' }}>403</b> — ไม่ใช่แค่ซ่อนปุ่มไว้ที่หน้าจอ
-              <div style={{ marginTop: 14, fontSize: 12.5, color: '#B5A88F' }}>
-                อยากดูรายงาน? ออกจากระบบแล้วเข้าใหม่ด้วยบทบาทเจ้าของร้านหรือผู้จัดการ
+              <b style={{ color: '#C23A2B' }}>403</b>
+              <div style={{ marginTop: 12, fontSize: 12.5, color: '#B5A88F' }}>
+                เข้าใหม่ด้วยบัญชีเจ้าของร้านถึงจะดูรายงานได้
               </div>
             </div>
           ) : (

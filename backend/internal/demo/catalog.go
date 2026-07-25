@@ -89,13 +89,13 @@ var Accounts = []Account{
 		Password:    "owner1234",
 		Role:        "superadmin",
 		Label:       "เจ้าของร้าน",
-		Description: "เห็นทุกอย่าง — ยอดขาย กำไร ต้นทุน แก้ราคา รับสต็อก ยกเลิกบิล",
+		Description: "ดูยอดขาย กำไร ต้นทุน จัดการสินค้าและสต็อก",
 	},
 	{
 		Username:    "cashier",
 		Password:    "cashier1234",
 		Role:        "cashier",
 		Label:       "พนักงานแคชเชียร์",
-		Description: "ขายและพิมพ์ใบเสร็จเท่านั้น — รายงานกำไรและการแก้ราคาถูกปิดที่เซิร์ฟเวอร์",
+		Description: "ขายและพิมพ์ใบเสร็จ ดูกำไรและแก้ราคาไม่ได้",
 	},
 }

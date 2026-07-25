@@ -75,7 +75,8 @@ textarea {
   padding: 34px 32px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  justify-content: center;
+  gap: 22px;
 }
 .signin__brand {
   display: flex;
@@ -116,7 +117,7 @@ textarea {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 11px;
 }
 .signin__features li {
   display: flex;
@@ -126,29 +127,10 @@ textarea {
   line-height: 1.55;
   color: #b9d2ce;
 }
-.signin__features b {
-  color: #fff;
-  font-weight: 600;
-}
 .signin__tick {
   color: #e89b2d;
   flex-shrink: 0;
   margin-top: 1px;
-}
-.signin__stack {
-  margin-top: auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding-top: 6px;
-}
-.signin__chip {
-  font-size: 11px;
-  font-family: 'Space Grotesk', sans-serif;
-  color: #9fc3bf;
-  border: 1px solid #1d5a56;
-  border-radius: 999px;
-  padding: 3px 9px;
 }
 .signin__form {
   padding: 30px 30px 26px;
@@ -360,7 +342,7 @@ textarea {
     padding: 26px 24px;
     gap: 16px;
   }
-  .signin__features li:nth-child(n + 4) {
+  .signin__features li:nth-child(n + 3) {
     display: none;
   }
   .signin__form {

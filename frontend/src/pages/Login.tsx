@@ -62,13 +62,10 @@ export default function Login() {
             <>
               <span className="signin__badge">
                 <span className="signin__dot" />
-                ระบบสาธิต — ข้อมูลตัวอย่าง
+                ระบบสาธิต
               </span>
               <h1 className="signin__h">เลือกบทบาทเพื่อเข้าใช้งาน</h1>
-              <p className="signin__sub">
-                กดปุ่มเดียวเข้าได้เลย ไม่ต้องกรอกอะไร แต่ละบทบาทเห็นและทำได้ไม่เท่ากัน
-                เพราะสิทธิ์ถูกตรวจที่ฝั่งเซิร์ฟเวอร์จริง
-              </p>
+              <p className="signin__sub">กดปุ่มเดียว ไม่ต้องกรอกอะไร</p>
 
               {accounts.map((a) => (
                 <RoleButton
@@ -212,47 +209,23 @@ function Pitch() {
         </div>
       </div>
 
-      <p className="signin__lede">
-        ระบบขายหน้าร้านสำหรับร้านโชห่วยและมินิมาร์ท ขายต่อได้แม้เน็ตหลุด
-        ตัดสต็อกและปิดยอดให้ตรงเสมอ
-      </p>
+      <p className="signin__lede">ระบบขายหน้าร้านสำหรับร้านโชห่วยและมินิมาร์ท</p>
 
       <ul className="signin__features">
-        <Feature title="ขายได้ตอนเน็ตหลุด">
-          บิลถูกเก็บในเครื่องแล้วซิงก์ให้เองเมื่อเน็ตกลับมา ไม่มีบิลซ้ำ ไม่มีบิลหาย
-        </Feature>
-        <Feature title="สต็อกเป็นบัญชีเดินสะพัด">
-          ทุกการเคลื่อนไหวถูกบันทึกและแก้ย้อนหลังไม่ได้ ยอดคงเหลือจึงตรวจสอบได้
-        </Feature>
-        <Feature title="รับเงินโอนแบบยืนยันเอง">
-          สร้าง QR พร้อมเพย์ที่หน้าจอ และตรวจเงินเข้าอัตโนมัติได้ถ้าต่อ LINE ไว้
-        </Feature>
-        <Feature title="สิทธิ์แยกตามบทบาท">
-          แคชเชียร์ขายได้แต่แก้ราคาและดูกำไรไม่ได้ ตรวจที่เซิร์ฟเวอร์ ไม่ใช่แค่ซ่อนปุ่ม
-        </Feature>
-        <Feature title="ใบเสร็จพิมพ์ได้จริง">
-          ออกได้ทั้งแบบ HTML และคำสั่ง ESC/POS สำหรับเครื่องพิมพ์สลิป 58/80 มม.
-        </Feature>
+        <Feature>ขายต่อได้ตอนเน็ตหลุด แล้วซิงก์ให้เองเมื่อเน็ตกลับมา</Feature>
+        <Feature>ตัดสต็อกทุกบิล ย้อนดูได้ว่าของหายไปไหน</Feature>
+        <Feature>รับเงินสดและโอนพร้อมเพย์ พิมพ์ใบเสร็จได้</Feature>
+        <Feature>แยกสิทธิ์เจ้าของร้านกับพนักงานหน้าเคาน์เตอร์</Feature>
       </ul>
-
-      <div className="signin__stack">
-        {['Go', 'PostgreSQL', 'React', 'TypeScript', 'PWA', 'Docker'].map((s) => (
-          <span className="signin__chip" key={s}>
-            {s}
-          </span>
-        ))}
-      </div>
     </div>
   )
 }
 
-function Feature({ title, children }: { title: string; children: React.ReactNode }) {
+function Feature({ children }: { children: React.ReactNode }) {
   return (
     <li>
       <Check w={15} h={15} className="signin__tick" style={{ flexShrink: 0, marginTop: 2 }} />
-      <span>
-        <b>{title}</b> — {children}
-      </span>
+      <span>{children}</span>
     </li>
   )
 }
@@ -276,8 +249,8 @@ function DemoFooter({ resetEvery, version }: { resetEvery?: string; version?: st
 
   return (
     <div className="signin__foot">
-      ข้อมูลทั้งหมดเป็นชุดตัวอย่างที่สร้างขึ้น (ยอดขายย้อนหลัง 30 วัน)
-      {resetEvery ? ' และถูกสร้างใหม่อัตโนมัติทุกวัน' : ''} · แก้อะไรก็ได้ตามสบาย
+      ข้อมูลตัวอย่าง มียอดขายย้อนหลัง 30 วัน แก้อะไรก็ได้
+      {resetEvery ? ' เพราะสร้างใหม่ทุกวันอยู่แล้ว' : ''}
       <br />
       {state === 'idle' && (
         <button className="signin__link" onClick={() => setState('confirm')} type="button">
@@ -297,7 +270,7 @@ function DemoFooter({ resetEvery, version }: { resetEvery?: string; version?: st
         </>
       )}
       {state === 'working' && 'กำลังสร้างข้อมูลใหม่…'}
-      {state === 'done' && 'รีเซ็ตเรียบร้อย — เข้าใช้งานได้เลย'}
+      {state === 'done' && 'รีเซ็ตเรียบร้อย เข้าใช้งานได้เลย'}
       {state === 'error' && 'รีเซ็ตไม่สำเร็จ (อาจเพิ่งมีคนรีเซ็ตไป) ลองอีกครั้งในอีกครู่'}
       {version && version !== 'dev' && (
         <span style={{ float: 'right', fontFamily: "'Space Grotesk',sans-serif" }}>{version}</span>
